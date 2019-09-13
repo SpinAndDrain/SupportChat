@@ -1,0 +1,25 @@
+###################################################################################################
+# How this works:                                                                                 #
+# This is a simple way to reward your supporters.                                                 #
+# This works with the help of Java Reflections.                                                   #
+# Enter the exact path of the method (<package-name>.<class>#<method>#<another-method> ...)       #
+# Then specify in "invoke" which datatypes your method requires.                                  #
+# And now enter the values of the datatypes in "params" in the correct order.                     #
+#                                                                                                 #
+# Please beware that you can call any method of any plugin with this function!                    #
+# Protect your server from exploitation!                                                          #
+###################################################################################################
+
+# The following code blocks are examples:
+
+# Description: Adds the specified value to the supporter's balance.
+# @params: Set the last line to your desired value. If you want to use only one position (for example '20' and not '20.0') change the
+#           second line of "invoke" to "java.math.BigDecimal#java.lang.Integer".
+essentials-addcoins:
+    target-method: com.earth2me.essentials.api.Economy#add
+    invoke:
+    - java.lang.String
+    - java.math.BigDecimal#java.lang.Double
+    params:
+    - [player-name]
+    - 20.0
