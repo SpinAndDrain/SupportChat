@@ -1,13 +1,14 @@
 ###################################################################################################
 # How this works:                                                                                 #
 # This is a simple way to reward your supporters.                                                 #
-# It works with the help of Java Reflections.                                                   #
+# It works with the help of Java Reflections.                                                     #
 # Enter the exact path of the method (<package-name>.<class>#<method>#<another-method> ...)       #
 # Then specify in "invoke" which datatypes your method requires.                                  #
 # And now enter the values of the datatypes in "params" in the correct order.                     #
 #                                                                                                 #
 # Please beware that you can call any method of any plugin with this function!                    #
 # Protect your server from exploitation!                                                          #
+# [PLEASE REPORT ANY ISSUES WITH THIS FUNCTION HERE: https://bit.ly/2mfof23]                      #
 ###################################################################################################
 
 # Placeholders: [player], [player-name], [player-id]
@@ -40,3 +41,4 @@ essentials-addcoins:
     params:
     - [player-name]
     - 20.0
+
