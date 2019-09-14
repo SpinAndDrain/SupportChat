@@ -8,4 +8,4 @@ default-reward:
   - java.lang.String
   params:
   - '[player]'
-  - '&cThis is beta stuff. Just a message for your reward. Wow!'
+  - '&cThis is a test...'
