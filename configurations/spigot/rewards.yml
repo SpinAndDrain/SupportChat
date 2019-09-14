@@ -1,4 +1,4 @@
-#  Rewards - Placeholders: [player], [player-name], [player-id] - 
+#  Rewards - Placeholders: [player], [player-name], [player-id]
 #  Examples here: https://github.com/SpinAndDrain/SupportChat/blob/master/examples/rewards.yml
 enable: true
 default-reward:
