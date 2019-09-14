@@ -1,0 +1,11 @@
+#  Rewards - Placeholders: [player], [player-name], [player-id] - 
+#  Examples here: https://github.com/SpinAndDrain/SupportChat/blob/master/examples/rewards.yml
+enable: true
+default-reward:
+  target-method: de.spinanddrain.supportchat.spigot.addon.Rewards#defaultReward
+  invoke:
+  - org.bukkit.entity.Player
+  - java.lang.String
+  params:
+  - '[player]'
+  - '&cThis is beta stuff. Just a message for your reward. Wow!'
