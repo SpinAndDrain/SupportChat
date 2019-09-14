@@ -1,0 +1,11 @@
+# Reasons DE 5.3
+Reasons:
+  enable: true
+  absolute-disable: false
+  reasons:
+  - Hier
+  - kannst
+  - du
+  - deine
+  - Gruende
+  - setzen!
