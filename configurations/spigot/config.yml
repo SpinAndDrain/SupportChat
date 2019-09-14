@@ -1,0 +1,12 @@
+# Config DE 5.3 | Time-Lag in MINUTEN | Mode Varianten: DEFAULT, HIDDEN, PERMISSION
+Language: DE
+Settings:
+  only-notify-when-logged: true
+  auto-login-on-join:
+    enable: false
+    mode: DEFAULT
+Updater:
+  check-update-on-enable: true
+  auto-update-notify:
+    use: false
+    time-lag: 60
