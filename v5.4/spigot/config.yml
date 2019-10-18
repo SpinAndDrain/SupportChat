@@ -1,7 +1,7 @@
 # Config v5.4 | Join-Login: FULL, HIDDEN, PERMISSION_RANGE, DISABLED
 
-# Unterstütze Sprachen: DE (Deutsch), EN (Englisch)
-# Supported languages: EN (English), DE (German)
+# Unterstütze Sprachen: DE (Deutsch), EN (Englisch) -> Bei Änderung bitte Server neustarten oder neu laden!
+# Supported languages: EN (English), DE (German) -> If you change please restart or reload server!
 language: DE
 
 # Bestimmt die Art, wie ein Supporter beim betreten des Servers eingeloggt werden soll.
