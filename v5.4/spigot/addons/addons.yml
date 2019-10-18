@@ -1,0 +1,90 @@
+# Addons v5.4 | Event-Modes: ALL, ACTOR, NONE | Timevalues: ms, s, m, h, d, w, mo, y
+
+# "enable" gibt an, ob das Addon aktiviert werden soll.
+# "message" gibt die Nachricht an, die der Sender des Befehls "/faq" erhalten soll. (Jeder Anstrich -> neue Zeile)
+#
+# "enable" defines if the addon should be enabled.
+# "message" defines the message which should be sended to the sender of the command "/faq". (each dash -> new line)
+faq:
+  enable: true
+  message:
+  - '&cF'
+  - '&aA'
+  - '&6Q'
+
+
+# Zeitintervalle:
+# ms -> Millisekunden
+# s -> Sekunden
+# m -> Minuten
+# h -> Stunden
+# d -> Tage
+# w -> Wochen
+# mo -> Monate
+# y -> Jahre
+#
+# "enable" gibt an, ob das Addon aktiviert werden soll.
+# "message" definiert die Nachricht die in der ActionBar angezeigt werden soll.
+# "empty" definiert die Nachricht die in der ActionBar angezeigt werden soll, wenn kein Supporter online ist.
+#
+# "fadeout: enable" true -> Die ActionBar ist immer zu sehen. false -> Die ActionBar ist nur an bestimmten Stellen für eine bestimmte Zeit zu sehen.
+# "fadeout: cooldown" (wirkt nur bei "fadeout: enable = false") Gibt die Zeit an, wie lang die ActionBar zu sehen sein soll.
+#
+# "events" -> (wirkt nur bei "fadeout: enable = false") Gibt die Stellen an, an der die ActionBar gezeigt werden soll.
+# ALL -> Allen Spielern wird die ActionBar beim Aufruf angezeigt.
+# ACTOR -> Nur dem Spieler der beim Aufruf direkt betroffen ist, wird die ActionBar angezeigt.
+# NONE -> Niemand wird die ActionBar beim Aufruf angezeigt (deaktiviert).
+#
+# onJoin - Wenn ein Spieler den Server betritt.
+# onMove - Wenn ein Spieler sich bewegt (Kann Performanceprobleme aufweisen!)
+# onSupporterLogin - Wenn sich ein Supporter einloggt.
+# onSupporterLogout - Wenn sich ein Supporter ausloggt.
+# onLoglistView - Wenn ein Spieler die Loglist aufruft.
+#
+# "send-each" gibt an, wie oft die ActionBar in einem angegebenen Intervall angezeigt werden soll.
+#
+#
+# English:
+# Time intervals:
+# ms -> milliseconds
+# s -> seconds
+# m -> minutes
+# h -> hours
+# d -> days
+# w -> weeks
+# mo -> months
+# y -> years
+#
+# "enable" defines if the addon should be enabled.
+# "message" defines the message which should displayed in the actionbar.
+# "empty" defines the message which should displayed in the actionbar, if no supporter is online / logged in.
+#
+# "fadeout: enable" true -> the actionbar is always displayed. false -> the actionbar is only displayed at given moments and for a given length.
+# "fadeout: cooldown" (only works with "fadeout: enable = false") defines the length the actionbar should displayed.
+#
+# "events" -> (only works with "fadeout: enable = false") defines the moments when the actionbar should displayed.
+# ALL -> All players will see the actionbar.
+# ACTOR -> Only the player which causes the event will see the actionbar.
+# NONE -> Nobody will see the actionbar (disabled).
+#
+# onJoin - When a player joins the server.
+# onMove - When a player moves (performance consuming!).
+# onSupporterLogin - When a supporter loggs in.
+# onSupporterLogout -When a supporter loggs out.
+# onLoglistView - When a player views the actionbar.
+#
+# "send-each" defines how often the ActionBar should be displayed at a specified interval.
+action-bar:
+  enable: true
+  message: '&b[count] &cSupporters online'
+  empty: '&cNo supporters online!'
+  fadeout:
+    enable: false
+    cooldown: 3s
+  events:
+    on-join: ALL
+    on-move: NONE
+    on-supporter-login: ALL
+    on-supporter-logout: ALL
+    on-loglist-view: ACTOR
+    send-each: 0ms
