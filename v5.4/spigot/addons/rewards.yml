@@ -1,0 +1,53 @@
+###################################################################################################
+# How this works:                                                                                 #
+# This is a simple way to reward your supporters.                                                 #
+# It works with the help of Java Reflections.                                                     #
+# Enter the exact path of the method (<package-name>.<class>#<method>#<another-method> ...)       #
+# Then specify in "invoke" which datatypes your method requires.                                  #
+# And now enter the values of the datatypes in "params" in the correct order.                     #
+#                                                                                                 #
+# Please beware that you can call any method of any plugin with this function!                    #
+# Protect your server from exploitation!                                                          #
+# [PLEASE REPORT ANY ISSUES WITH THIS FUNCTION HERE: https://bit.ly/2mfof23]                      #
+###################################################################################################
+
+# Placeholders: [player], [player-name], [player-id]
+# [player] - returns the player (org.bukkit.entity.Player)
+# [player-name] - returns the player's name (java.lang.String)
+# [player-id] - returns the player's UUID (java.lang.String)
+
+# The following code blocks are examples. 
+# If you want to use one you can just copy it in your rewards.yml file.
+# NOTE: Please pay attention to the requirements.
+
+# Description: Default reward.
+# You can delete it from your rewards.yml - The block will not be generated again until the file isn't recreated.
+# @params: Sends the specified message (params:line-2) to the supporter.
+# @requirements: none
+default-reward:
+  target-method: de.spinanddrain.supportchat.spigot.addon.Rewards#defaultReward
+  invoke:
+  - org.bukkit.entity.Player
+  - java.lang.String
+  params:
+  - '[player]'
+  - '&cThis is a test...'
+
+# Description: Adds the specified value to the supporter's balance.
+# @params: Set the last line to your desired value. If you want to use only one position (for example '20' and not '20.0') change the
+#           second line of "invoke" to "java.math.BigDecimal#java.lang.Integer".
+# @requirements: EssentialsX (https://www.spigotmc.org/resources/essentialsx.9089/)
+essentials-addcoins:
+    target-method: com.earth2me.essentials.api.Economy#add
+    invoke:
+    - java.lang.String
+    - java.math.BigDecimal#java.lang.Double
+    params:
+    - [player-name]
+    - 20.0
+
+# *** If you want your example here, send me a private message on SpigotMC (https://www.spigotmc.org/members/spinanddrain.596500/) ***
+
+
+
+
