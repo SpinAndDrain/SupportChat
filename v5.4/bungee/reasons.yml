@@ -1,10 +1,18 @@
-Reasons:
-  enable: true
-  absolute-disabled: false
-  reasons:
-  - Hier
-  - kannst
-  - du
-  - deine
-  - Gruende
-  - setzen!
+# Definiert die Art, wie "/support [<Grund>]" verwendet werden soll.
+# ENABLED -> Es muss einer der (unten) aufgelisteten Gründe angegeben werden.
+# DISABLED -> Es muss ein Grund angegeben werden, welcher jedoch selbst definiert werden kann.
+# ABSOLUTE_DISABLED -> Ein Grund ist nicht zwingend notwendig, kann aber wie bei 'DISABLED' definiert werden.
+#
+# Defines the way how "/support [<reason>]" should be used.
+# ENABLED -> A reason from the list (below) is required.
+# DISABLED -> A custom reason is required.
+# ABSOLUTE_DISABLED -> No reason required but can be custom defined.
+mode: ENABLED
+
+# Liste der vorgegebenen Gründe (unendlich möglich).
+# List of given reasons (infinitely possible).
+reasons:
+- Set
+- Your
+- Reasons
+- Here
