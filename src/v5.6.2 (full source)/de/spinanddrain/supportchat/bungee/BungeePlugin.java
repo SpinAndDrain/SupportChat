@@ -67,24 +67,24 @@ public class BungeePlugin extends Plugin implements Server {
 		conversations = new ArrayList<>();
 		
 		if(getServerVersion() == ServerVersion.UNSUPPORTED_TERMINAL) {
-			sendMessage(Updater.prefix + "Â§c> Â§cThe plugin does not support your server version!");
-			sendMessage(Updater.prefix + "Â§eStopping...");
+			sendMessage(Updater.prefix + "§c> §cThe plugin does not support your server version!");
+			sendMessage(Updater.prefix + "§eStopping...");
 			BungeeCord.getInstance().stop("SupportChat: Unsupported Terminal");
 			return;
 		}
 		
 		prepareConfigurations();
 		
-		sendMessage("Â§7__________[Â§9SupportChat Â§52Â§7]_________");
+		sendMessage("§7__________[§9SupportChat §52§7]_________");
 		sendMessage(" ");
-		sendMessage("Â§7   Current Version: Â§b"+provider.getDescription().getVersion());
-		sendMessage("Â§7   Plugin by Â§cSpinAndDrain");
-		sendMessage("Â§7   Your Serverversion: Â§b(BungeeCord) "+getServerVersion().convertFormat());
+		sendMessage("§7   Current Version: §b"+provider.getDescription().getVersion());
+		sendMessage("§7   Plugin by §cSpinAndDrain");
+		sendMessage("§7   Your Serverversion: §b(BungeeCord) "+getServerVersion().convertFormat());
 		String extm = SupportChat.readExternalMessageRaw();
 		if(extm != null && !extm.equals(new String())) {
-			sendMessage("   "+extm.replace("&", "Â§"));
+			sendMessage("   "+extm.replace("&", "§"));
 		}
-		sendMessage("Â§7__________________________________");
+		sendMessage("§7__________________________________");
 		
 		u = new Updater();
 		
@@ -219,7 +219,7 @@ public class BungeePlugin extends Plugin implements Server {
 	}
 	
 	public static String getString(int i, String path) {
-		return ((String) get(i, path)).replaceAll("&", "Â§");
+		return ((String) get(i, path)).replaceAll("&", "§");
 	}
 	
 	public static String getMessage(String path, boolean prefix) {
@@ -396,7 +396,7 @@ public class BungeePlugin extends Plugin implements Server {
 			} else {
 				cc = "";
 			}
-			if(a[i].startsWith("Â§") && !cc.equals(color)) {
+			if(a[i].startsWith("§") && !cc.equals(color)) {
 				color = cc;
 				String tmp = a[i];
 				if((i + 1) == a.length) {

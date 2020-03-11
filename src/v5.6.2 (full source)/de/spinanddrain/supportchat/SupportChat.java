@@ -6,13 +6,23 @@ import java.io.InputStreamReader;
 import java.net.URL;
 
 public final class SupportChat {
+
+	 /*
+	  *  CHANGES: TRUE
+	  *  - EXTENDED UPDATER
+	  *  VERSION NOW: (v5.6.3), on more goto (v5.7)
+	  */
 	
 	/*
 	 * Created by SpinAndDrain on 11.10.2019
 	 */
 	
 	static {
-		source = new String("?");
+		/*
+		 * Old: ext.mess.201912192015.state
+		 * New: ext.mess.202001162102.state
+		 */
+		source = new String("ext.mess.202001162102.state");
 		try {
 			Plugin =  Class.forName("net.md_5.bungee.api.plugin.Plugin");
 			ProxiedPlayer = Class.forName("net.md_5.bungee.api.connection.ProxiedPlayer");
@@ -43,7 +53,7 @@ public final class SupportChat {
 
 	public static String readExternalMessageRaw() {
 		try {
-			return new BufferedReader(new InputStreamReader(new URL("?" + source).openStream())).readLine();
+			return new BufferedReader(new InputStreamReader(new URL("http://spinanddrain.bplaced.net/sessions/supportchat/" + source).openStream())).readLine();
 		} catch (IOException | NullPointerException e) {
 			return new String();
 		}
