@@ -88,3 +88,9 @@ action-bar:
     on-supporter-logout: ALL
     on-loglist-view: ACTOR
     send-each: 0ms
+    
+# Loggt Supporter automatisch aus, wenn sie abwesend sind.
+# Logs supporters automatically out when they are going afk.
+# Required: EssentialsX
+essentials-afk-hook:
+  enable: false
