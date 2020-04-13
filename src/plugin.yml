@@ -1,0 +1,15 @@
+name: SupportChat
+author: SpinAndDrain
+version: 5.9
+main: de.spinanddrain.supportchat.spigot.SpigotPlugin
+commands:
+  support:
+  requests:
+    aliases: [req]
+  scend:
+  sclogin:
+  sclogout:
+  loglist:
+  listen:
+  screload:
+  faq:

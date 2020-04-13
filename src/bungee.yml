@@ -1,0 +1,16 @@
+name: SupportChat
+author: SpinAndDrain
+version: 5.9
+main: de.spinanddrain.supportchat.bungee.BungeePlugin
+commands:
+   support:
+   requests:
+   scend:
+   sclogin:
+   sclogout:
+   listen:
+   loglist:
+   screload:
+   scb:
+   faq:
+   req:
