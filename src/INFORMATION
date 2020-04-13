@@ -1,6 +1,6 @@
 You can add support for more plugins then only EssentialsX for the AFK-Hook manually. You can call the event
 via the SupportChat main class -> de.spinanddrain.supportchat.spigot.SpigotPlugin#callAFKEvent
-The method needs an 'AFKHook# Object. You can easily create a new instance of 'AFKHook'. Define in the constructor of the hook
+The method needs an 'AFKHook' Object. You can easily create a new instance of 'AFKHook'. Define in the constructor of the hook
 which player should be affected and if he is going afk right now or getting back.
 
 // true = is going afk right now
@@ -9,3 +9,4 @@ which player should be affected and if he is going afk right now or getting back
 ForExample:
 
 SpigotPlugin.provide().callAFKEvent(new AFKHook(Supporter.cast(player), true));
+// Note: Supporter#cast returns null if the Player is not a supporter.
