@@ -10,21 +10,13 @@ import de.spinanddrain.supportchat.external.sql.overlay.Table;
 import de.spinanddrain.supportchat.external.sql.overlay.Datatype.Type;
 
 public final class SupportChat {
-
-	 /*
-	  *  CHANGES: FALSE
-	  */
 	
 	/*
 	 * Created by SpinAndDrain on 11.10.2019
 	 */
 	
 	static {
-		/*
-		 * Old: ext.mess.201912192015.state
-		 * New: ext.mess.202001162102.state
-		 */
-		source = new String("ext.mess.202001162102.state");
+		source = new String("?");
 		SQL_TABLE = new Table("supportchat", new Datatype[]{new Datatype(Type.VARCHAR, "id", 100), new Datatype(Type.VARCHAR, "reason", 100)});
 		try {
 			Plugin =  Class.forName("net.md_5.bungee.api.plugin.Plugin");
@@ -58,7 +50,7 @@ public final class SupportChat {
 
 	public static String readExternalMessageRaw() {
 		try {
-			return new BufferedReader(new InputStreamReader(new URL("http://spinanddrain.bplaced.net/sessions/supportchat/" + source).openStream())).readLine();
+			return new BufferedReader(new InputStreamReader(new URL(source).openStream())).readLine();
 		} catch (IOException | NullPointerException e) {
 			return new String();
 		}
