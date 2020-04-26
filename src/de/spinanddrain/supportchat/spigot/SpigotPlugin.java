@@ -41,6 +41,7 @@ import de.spinanddrain.supportchat.spigot.configuration.ConfigurationHandler;
 import de.spinanddrain.supportchat.spigot.configuration.Datasaver;
 import de.spinanddrain.supportchat.spigot.configuration.Defaults;
 import de.spinanddrain.supportchat.spigot.configuration.Messages;
+import de.spinanddrain.supportchat.spigot.configuration.Placeholder;
 import de.spinanddrain.supportchat.spigot.configuration.Reasons;
 import de.spinanddrain.supportchat.spigot.configuration.RewardsConfiguration;
 import de.spinanddrain.supportchat.spigot.conversation.Conversation;
@@ -81,6 +82,8 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 	
 	private String storedLanguage;
 	
+	private int notificator;
+	
 	@Override
 	public void onEnable() {
 		instance = this;
@@ -91,24 +94,24 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 		windows = new ArrayList<>();
 		
 		if(getServerVersion() == ServerVersion.UNSUPPORTED_TERMINAL) {
-			getServer().getConsoleSender().sendMessage(Updater.prefix + "§c> The plugin does not support your server version!");
-			getServer().getConsoleSender().sendMessage(Updater.prefix + "§eDisabling...");
+			getServer().getConsoleSender().sendMessage(Updater.prefix + "Â§c> The plugin does not support your server version!");
+			getServer().getConsoleSender().sendMessage(Updater.prefix + "Â§eDisabling...");
 			getServer().getPluginManager().disablePlugin(this);
 			return;
 		}
 		
 		prepareConfigurations();
 		
-		getServer().getConsoleSender().sendMessage("§7__________[§9SupportChat §52§7]_________");
+		getServer().getConsoleSender().sendMessage("Â§7__________[Â§9SupportChat Â§52Â§7]_________");
 		getServer().getConsoleSender().sendMessage(" ");
-		getServer().getConsoleSender().sendMessage("§7   Current Version: §b"+instance.getDescription().getVersion());
-		getServer().getConsoleSender().sendMessage("§7   Plugin by §cSpinAndDrain");
-		getServer().getConsoleSender().sendMessage("§7   Your Serverversion: §b(Spigot) "+getServerVersion().convertFormat());
+		getServer().getConsoleSender().sendMessage("Â§7   Current Version: Â§b"+instance.getDescription().getVersion());
+		getServer().getConsoleSender().sendMessage("Â§7   Plugin by Â§cSpinAndDrain");
+		getServer().getConsoleSender().sendMessage("Â§7   Your Serverversion: Â§b(Spigot) "+getServerVersion().convertFormat());
 		String extm = SupportChat.readExternalMessageRaw();
 		if(extm != null && !extm.equals(new String())) {
-			getServer().getConsoleSender().sendMessage("   "+extm.replace("&", "§"));
+			getServer().getConsoleSender().sendMessage("   "+extm.replace("&", "Â§"));
 		}
-		getServer().getConsoleSender().sendMessage("§7__________________________________");
+		getServer().getConsoleSender().sendMessage("Â§7__________________________________");
 		
 		u = new Updater(this);
 		
@@ -120,7 +123,7 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 		getServer().getOnlinePlayers().forEach(online -> verifyPlayer(online));
 		
 		if(saver.use()) {
-			this.sql = new MySQL(saver.getHost(), String.valueOf(saver.getPort()), saver.getDatabase(), saver.getUser(), saver.getPassword());
+			this.sql = new MySQL(saver.getHost(), String.valueOf(saver.getPort()), saver.getDatabase(), saver.getUser(), saver.getPassword(), saver.useSSL());
 			getLogger().log(Level.WARNING, "The MySQL connection is established synchronously. It could take a while until your server is ready.");
 			try {
 				this.sql.connect();
@@ -135,6 +138,8 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 				e.printStackTrace();
 			}
 		}
+		
+		verifyNotificator();
 		
 		mb = ActionBar.createOfConfig();
 		
@@ -176,6 +181,7 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 				e.printStackTrace();
 			}
 		}
+		closeNotificatorQuietly();
 	}
 	
 	public static SpigotPlugin provide() {
@@ -214,6 +220,39 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 		return (requests.size() / 53);
 	}
 	
+	private void verifyNotificator() {
+		if(Config.AUTO_NOTIFICATION.asBoolean()) {
+			notificator = getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> {
+				for(Supporter all : supporters) {
+					if(this.anyRequestOpen() && all.isLoggedIn()) {
+						int b = 0;
+						for(Request r : requests) {
+							if(r.getState() == RequestState.OPEN) {
+								b++;
+							}
+						}
+						all.getSupporter().sendMessage(Messages.REQUESTS_AVAILABLE.getWithPlaceholder(Placeholder.create("[count]", String.valueOf(b))));
+					}
+				}
+			}, 20, 20 * Config.AUTO_NOTIFICATION_DELAY.asLong());
+		}
+	}
+	
+	private void closeNotificatorQuietly() {
+		if(getServer().getScheduler().isCurrentlyRunning(notificator)) {
+			getServer().getScheduler().cancelTask(notificator);
+		}
+	}
+	
+	public boolean anyRequestOpen() {
+		for(Request r : requests) {
+			if(r.getState() == RequestState.OPEN) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	private void lcroutine() {
 		final File m = new File("plugins/SupportChat/messages.yml");
 		if(!storedLanguage.equals(getLanguage())) {
@@ -223,6 +262,7 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 	}
 	
 	public void reload() {
+		closeNotificatorQuietly();
 		lcroutine();
 		config.reload();
 		messages.reload();
@@ -233,6 +273,7 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 		mb = ActionBar.createOfConfig();
 		initialConstantItems();
 		saver.getHandler().reload();
+		verifyNotificator();
 	}
 	
 	private void prepareConfigurations() {
