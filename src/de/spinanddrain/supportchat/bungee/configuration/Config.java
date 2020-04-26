@@ -26,6 +26,8 @@ public class Config {
 			public void copyDefaults(Configuration cfg) {
 				addDefault("check-update", true);
 				addDefault("join-login", "DISABLED");
+				addDefault("auto-notification.enable", true);
+				addDefault("auto-notification.delay", 120);
 			}
 		};
 	}
