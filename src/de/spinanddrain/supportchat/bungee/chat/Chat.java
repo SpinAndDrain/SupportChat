@@ -1,6 +1,6 @@
 package de.spinanddrain.supportchat.bungee.chat;
 
-import net.md_5.bungee.api.chat.ComponentBuilder;
+import de.spinanddrain.supportchat.bungee.util.ComprehensiveComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
@@ -21,7 +21,7 @@ public class Chat {
 	}
 	
 	public void sendPluginMessage(MessageHandler handler) {
-		ComponentBuilder builder = new ComponentBuilder(new TextComponent());
+		ComprehensiveComponentBuilder builder = new ComprehensiveComponentBuilder();
 		TextComponent[] f = handler.getFinalMessage();
 		for(int i = 0; i < f.length; i++) {
 			builder.append(f[i]);
@@ -33,12 +33,12 @@ public class Chat {
 	}
 	
 	public void sendRelatedPluginMessage(MessageHandler handler) {
-		ComponentBuilder tc = new ComponentBuilder(new TextComponent());
+		ComprehensiveComponentBuilder tc = new ComprehensiveComponentBuilder();
 		TextComponent[] fin = handler.getFinalMessage();
 		for(int i = 0; i < fin.length; i++) {
 			tc.append(fin[i]);
 			if((i + 1) != fin.length) {
-				tc.append(" ง7* ");
+				tc.append(" ยง7* ");
 			}
 		}
 		pp.sendMessage(tc.create());
