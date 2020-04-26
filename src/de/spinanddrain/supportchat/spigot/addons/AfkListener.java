@@ -1,5 +1,6 @@
 package de.spinanddrain.supportchat.spigot.addons;
 
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
@@ -12,8 +13,11 @@ public class AfkListener implements Listener {
 	@EventHandler
 	public void onAfk(AfkStatusChangeEvent event) {
 		Supporter s = Supporter.cast(event.getAffected().getBase());
-		if(s != null)
-			SpigotPlugin.provide().callAFKEvent(new AFKHook(s, event.getValue()));
+		if(s != null) {
+			Bukkit.getScheduler().runTask(SpigotPlugin.provide(), () -> {
+				SpigotPlugin.provide().callAFKEvent(new AFKHook(s, event.getValue()));
+			});
+		}
 	}
 	
 }
