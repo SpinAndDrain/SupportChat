@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import de.spinanddrain.supportchat.Permissions;
@@ -44,6 +45,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
+import net.md_5.bungee.api.scheduler.ScheduledTask;
 
 public class BungeePlugin extends Plugin implements Server {
 
@@ -68,6 +70,7 @@ public class BungeePlugin extends Plugin implements Server {
 	private List<Conversation> conversations;
 	
 	private MySQL sql;
+	private ScheduledTask notificator;
 	
 	@Override
 	public void onEnable() {
@@ -78,24 +81,24 @@ public class BungeePlugin extends Plugin implements Server {
 		conversations = new ArrayList<>();
 		
 		if(getServerVersion() == ServerVersion.UNSUPPORTED_TERMINAL) {
-			sendMessage(Updater.prefix + "§c> §cThe plugin does not support your server version!");
-			sendMessage(Updater.prefix + "§eStopping...");
+			sendMessage(Updater.prefix + "Â§c> Â§cThe plugin does not support your server version!");
+			sendMessage(Updater.prefix + "Â§eStopping...");
 			BungeeCord.getInstance().stop("SupportChat: Unsupported Terminal");
 			return;
 		}
 		
 		prepareConfigurations();
 		
-		sendMessage("§7__________[§9SupportChat §52§7]_________");
+		sendMessage("Â§7__________[Â§9SupportChat Â§52Â§7]_________");
 		sendMessage(" ");
-		sendMessage("§7   Current Version: §b"+provider.getDescription().getVersion());
-		sendMessage("§7   Plugin by §cSpinAndDrain");
-		sendMessage("§7   Your Serverversion: §b(BungeeCord) "+getServerVersion().convertFormat());
+		sendMessage("Â§7   Current Version: Â§b"+provider.getDescription().getVersion());
+		sendMessage("Â§7   Plugin by Â§cSpinAndDrain");
+		sendMessage("Â§7   Your Serverversion: Â§b(BungeeCord) "+getServerVersion().convertFormat());
 		String extm = SupportChat.readExternalMessageRaw();
 		if(extm != null && !extm.equals(new String())) {
-			sendMessage("   "+extm.replace("&", "§"));
+			sendMessage("   "+extm.replace("&", "Â§"));
 		}
-		sendMessage("§7__________________________________");
+		sendMessage("Â§7__________________________________");
 		
 		u = new Updater();
 		
@@ -105,8 +108,12 @@ public class BungeePlugin extends Plugin implements Server {
 		
 		getProxy().getPlayers().forEach(player -> verifyPlayer(player));
 		
+		if(messages.getParser().getEntries().length < Messages.length) {
+			getLogger().log(Level.WARNING, "Language file '" + messages.getAdapter().cfg.getString("language-file") + "' is incomplete! Please update!");
+		}
+		
 		if(saver.use()) {
-			this.sql = new MySQL(saver.getHost(), String.valueOf(saver.getPort()), saver.getDatabase(), saver.getUser(), saver.getPassword());
+			this.sql = new MySQL(saver.getHost(), String.valueOf(saver.getPort()), saver.getDatabase(), saver.getUser(), saver.getPassword(), saver.useSSL());
 			getLogger().log(Level.WARNING, "The MySQL connection is established synchronously. It could take a while until your server is ready.");
 			try {
 				this.sql.connect();
@@ -121,6 +128,8 @@ public class BungeePlugin extends Plugin implements Server {
 				e.printStackTrace();
 			}
 		}
+		
+		verifyNotificator();
 		
 		mb = ActionBar.createOfConfig();
 		
@@ -150,6 +159,9 @@ public class BungeePlugin extends Plugin implements Server {
 			} catch (ConnectionFailedException e) {
 				e.printStackTrace();
 			}
+		}
+		if(notificator != null) {
+			notificator.cancel();
 		}
 	}
 	
@@ -189,7 +201,45 @@ public class BungeePlugin extends Plugin implements Server {
 		return addons;
 	}
 	
+	private void verifyNotificator() {
+		if(config.getAdapter().cfg.getBoolean("auto-notification.enable")) {
+			notificator = getProxy().getScheduler().schedule(this, getNotificationScheduler(), 1, config.getAdapter().cfg.getLong("auto-notification.delay"), TimeUnit.SECONDS);
+		}
+	}
+	
+	private Runnable getNotificationScheduler() {
+		return () -> {
+			for(Supporter all : supporters) {
+				if(this.anyRequestOpen() && all.isLoggedIn()) {
+					int b = 0;
+					for(Request r : requests) {
+						if(r.getState() == RequestState.OPEN) {
+							b++;
+						}
+					}
+					if(get(MESSAGES, "requests-available") != null) {
+						sendPluginMessage(all.getSupporter(), "requests-available", new Placeholder("[count]", String.valueOf(b)));
+					} else {
+						sendMessage(getProxy().getConsole(), "Â§cError. Missing entrys in '" + messages.getAdapter().cfg.getString("language-file") + "'");
+					}
+				}
+			}
+		};
+	}
+	
+	public boolean anyRequestOpen() {
+		for(Request r : requests) {
+			if(r.getState() == RequestState.OPEN) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public void reload() {
+		if(notificator != null) {
+			notificator.cancel();
+		}
 		config.getAdapter().reload();
 		messages.getAdapter().reload();
 		messages.reInitParser();
@@ -197,6 +247,7 @@ public class BungeePlugin extends Plugin implements Server {
 		addons.getAdapter().reload();
 		mb.kill();
 		mb = ActionBar.createOfConfig();
+		verifyNotificator();
 	}
 	
 	public static void sendMessage(String message) {
@@ -269,7 +320,7 @@ public class BungeePlugin extends Plugin implements Server {
 	}
 	
 	public static String getString(int i, String path) {
-		return ((String) get(i, path)).replaceAll("&", "§");
+		return ((String) get(i, path)).replaceAll("&", "Â§");
 	}
 	
 	public static String getMessage(String path, boolean prefix) {
@@ -447,7 +498,7 @@ public class BungeePlugin extends Plugin implements Server {
 			} else {
 				cc = "";
 			}
-			if(a[i].startsWith("§") && !cc.equals(color)) {
+			if(a[i].startsWith("Â§") && !cc.equals(color)) {
 				color = cc;
 				String tmp = a[i];
 				if((i + 1) == a.length) {
