@@ -10,7 +10,9 @@ public enum Config {
 	
 	LANGUAGE("DE"),
 	JOIN_LOGIN(Mode.DISABLED.toString()),
-	CHECK_UPDATE(true);
+	CHECK_UPDATE(true),
+	AUTO_NOTIFICATION(true),
+	AUTO_NOTIFICATION_DELAY(120);
 	
 	private final String path;
 	private final Object def;
@@ -39,6 +41,10 @@ public enum Config {
 		return handler.configuration.getBoolean(path);
 	}
 
+	public long asLong() {
+		return handler.configuration.getLong(path);
+	}
+	
 	public Mode asMode() {
 		return Mode.valueOf(asString().toUpperCase());
 	}
