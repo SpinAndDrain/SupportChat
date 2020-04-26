@@ -50,13 +50,13 @@ public class Listeners implements Listener {
 		Player p = event.getTarget().getSupporter();
 		if(event.isGoingAfk() && event.getTarget().isLoggedIn()) {
 			AFKHook.MEMORY.add(AFKHook.compile(new StringifiedListPacket(p.getUniqueId().toString(), event.getTarget().isHidden(), true)));
-			p.performCommand("sclogout");
+			p.performCommand("supportchat:sclogout");
 		} else {
 			StringifiedListPacket[] pack = AFKHook.parseAll();
 			for(int i = 0; i < pack.length; i++) {
 				if(event.getTarget() == pack[i].getSupporter()) {
-					p.performCommand("sclogin" + (pack[i].wasHidden() ? " hidden" : ""));
-					AFKHook.MEMORY.remove(i);
+					p.performCommand("supportchat:sclogin" + (pack[i].wasHidden() ? " hidden" : ""));
+					AFKHook.MEMORY.remove(AFKHook.compile(pack[i]));
 				}
 			}
 		}
@@ -69,9 +69,9 @@ public class Listeners implements Listener {
 		if(window.getTitle().equals(Messages.INVENTORY_REQUESTS.getWithoutPrefix())) {
 			if(event.getClickedItem() == SpigotPlugin.provide().refresh) {
 				player.closeInventory();
-				player.performCommand("requests");
+				player.performCommand("supportchat:requests");
 			} else {
-				String data = event.getClickedItem().getRaw().getItemMeta().getDisplayName().replaceAll("§c§l", new String()).replaceAll("§e§l", new String());
+				String data = event.getClickedItem().getRaw().getItemMeta().getDisplayName().replaceAll("Â§cÂ§l", new String()).replaceAll("Â§eÂ§l", new String());
 				player.closeInventory();
 				window = new InventoryWindow(9, Messages.MANAGER_REQUEST.getWithoutPrefix());
 				window.addConstant(SpigotPlugin.provide().accept);
@@ -102,13 +102,13 @@ public class Listeners implements Listener {
 					} else
 						player.sendMessage(Messages.CONVERSATION_ALREADY_RUNNING.getMessage());
 				} else if(i.getRaw().getItemMeta().equals(SpigotPlugin.provide().back.getRaw().getItemMeta())) {
-					player.performCommand("requests");
+					player.performCommand("supportchat:requests");
 				} else if(i.getRaw().getItemMeta().equals(SpigotPlugin.provide().listen.getRaw().getItemMeta())) {
 					if(Permissions.LISTEN.hasPermission(player)) {
 						Supporter s = Supporter.cast(player);
 						if(!s.isTalking() && !s.isListening()) {
 							if(r.getState() == RequestState.HANDLE) {
-								player.performCommand("listen " + SpigotPlugin.provide().getConversationOf(r).getId());
+								player.performCommand("supportchat:listen " + SpigotPlugin.provide().getConversationOf(r).getId());
 							} else
 								player.sendMessage(Messages.CONVERSATION_NOT_STARTED.getMessage());
 						} else
@@ -153,9 +153,9 @@ public class Listeners implements Listener {
 			case PERMISSION_RANGE:
 				if(Supporter.cast(player) != null) {
 					if(Permissions.LOGIN_HIDDEN.hasPermission(player)) {
-						player.performCommand("sclogin hidden");
+						player.performCommand("supportchat:sclogin hidden");
 					} else if(Permissions.LOGIN.hasPermission(player)) {
-						player.performCommand("sclogin");
+						player.performCommand("supportchat:sclogin");
 					}
 				}
 				break;
@@ -186,7 +186,7 @@ public class Listeners implements Listener {
 		 Supporter s = Supporter.cast(player);
 		 if(s != null) {
 			 if(s.isLoggedIn()) {
-				 player.performCommand("sclogout");
+				 player.performCommand("supportchat:sclogout");
 			 }
 			 SpigotPlugin.provide().getOnlineSupporters().remove(s);
 		 }
