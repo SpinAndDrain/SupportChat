@@ -46,7 +46,7 @@ y | year(s)
 * ```empty: '&cNo supporters online!'``` The message which should be shown in the action bar if no supporter is online.
 * **fadeout**
   * ```enable: false``` If you set this to *true* the action bar will be shown continuous.
-  * ```cooldown: 3s``` Defines how long the action bar should stay (only works with *fadeout.enable = false*)
+  * ```cooldown: 3s``` Defines how long the action bar should stay (only works with *fadeout.enable = false*).
 * **events** Defines when and for whom the action bar should be shown.
   * ```on-join: ALL``` Triggered when a player joins the server.
   * ```on-supporter-login: ALL``` Triggered when a supporter logs in.
@@ -60,7 +60,7 @@ y | year(s)
     ACTOR | The executing player of the respective event.
     NONE | No player.
   
-  * ```send-each: 0ms``` Defines how often the action bar should be shown by the given interval (0 = disabled)
+  * ```send-each: 0ms``` Defines how often the action bar should be shown by the given interval (0 = disabled).
   
 ## Config
 
@@ -77,9 +77,9 @@ y | year(s)
 
 * **updater**
   * ```check-on-startup: true``` The plugin checks for newer versions on each startup (in the console) if this is set to *true*.
-  * ```auto-download: true``` The plugin automatically downloads (if available) the newer version (works only with ```check-on-startup: true```)
+  * ```auto-download: true``` The plugin automatically downloads (if available) the newer version (works only with ```check-on-startup: true```).
 * ```auto-notification: 2m``` All supporters a receiving a message if support requests are still open by the given interval (0 = disabled).
-* ```request-delay: 10m``` Defines the delay between each support request of a player (this should prevent spam, 0 = disabled)
+* ```request-delay: 10m``` Defines the delay between each support request of a player (this should prevent spam, 0 = disabled).
 * ```request-auto-delete-after: 1d``` Defines the interval after a support request should be automatically deleted if no supporter is handling it (0 = disabled).
 
 ## Messages
@@ -93,7 +93,7 @@ y | year(s)
 
 **File:** mysql.yml
 
-* ```use: false``` *true* if you want to use MySQL
+* ```use: false``` *true* if you want to use MySQL.
 * ```host: localhost``` Defines the host of your MySQL server.
 * ```port: 3306``` Defines the port of your MySQL server.
 * ```database: supportchat``` Defines the target database.
@@ -120,4 +120,4 @@ y | year(s)
   - Reasons
   - Here!
   ```
-  Defines the given reasons. Each dash is a new reasons. (only works with ```mode: ENABLED```)
+  Defines the given reasons. Each dash is a new reasons. (only works with ```mode: ENABLED```).
