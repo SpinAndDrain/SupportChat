@@ -16,37 +16,20 @@ import de.spinanddrain.util.holding.Memorizer;
 
 public final class SupportChat {
 	
-	 /*
-	  *  CHANGES: TRUE
-	  *  - fixed Updater
-	  *  -> added LibsCollection
-	  *  - update to LScript2
-	  *  - update Updater
-	  *  - removed external stuff
-	  *  
-	  *  classchanges: *
-	  *  
-	  *  (Upcomming: Update to LScript2)
-	  */
-	
 	/*
 	 * Created by SpinAndDrain on 11.10.2019
 	 */
 
 	public static final String DEPENDENCY_VERSION = "1.2";
 	public static final boolean HIGHER = true;
-	
-	/*
-	 * Old: ext.mess.201912192015.state
-	 * New: ext.mess.202001162102.state
-	 */
-	private static final String source = new String("ext.mess.202001162102.state");
+
+	private static final String source = new String("?");
 	
 	private SupportChat() {}
 
 	public static String readExternalMessageRaw() {
 		try {
-			return new BufferedReader(new InputStreamReader(new URL("http://spinanddrain.bplaced.net/sessions/supportchat/" + source).openStream())).readLine();
+			return new BufferedReader(new InputStreamReader(new URL("?" + source).openStream())).readLine();
 		} catch (IOException | NullPointerException e) {
 			return new String();
 		}
