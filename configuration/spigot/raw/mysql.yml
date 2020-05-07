@@ -1,8 +1,8 @@
 # MySQL option to store requests
-use: true
+use: false
 host: localhost
 port: 3306
-database: servertest
+database: supportchat
 user: root
-password: ''
+password: pw123
 useSSL: false
