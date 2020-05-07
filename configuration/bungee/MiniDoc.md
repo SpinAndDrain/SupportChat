@@ -1,5 +1,7 @@
 # SupportChat Configurations - BungeeCord
 
+*Current Version: 6.2*
+
 ### Quick navigation
 
 * [Time Strings](#time-strings)
