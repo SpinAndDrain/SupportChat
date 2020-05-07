@@ -1,0 +1,74 @@
+@type(sc-de-b6.2a)
+@pattern(SupportChat.p-b6.2a)
+
+# Main messages
+main {
+	prefix: '&7[&6SupportChat&7]'
+	no-permission: '&cKeine Rechte!'
+	new-request: '&9Eine neue Supportanfrage ist verfübar! &7(/requests)'
+	request-expired: '&cDeine Supportanfrage ist abgelaufen.'
+	requesting-too-fast: '&cBitte warte noch &e[remaining] &cbevor du eine neue Anfrage stellen kannst!'
+	not-requested: '&cDu befindest dich nicht in der Warteschlange.'
+	queue-joined: '&aDu befindest dich nun in der Warteschlange! Bitte habe etwas Geduld!'
+	queue-left: '&aDu hast die Warteschlange erfolgreich verlassen.'
+	already-in-queue: '&cDu befindest dich bereits in der Warteschlange!'
+	crwl: '&cDu kannst keinen Support anfordern, wenn du selbst ein Supporter bist!'
+	clwr: '&cDu kannst dich nicht einloggen, wenn du Support angefordert hast!'
+	conversation-already-running: '&cDie Konversation läuft bereits!'
+	conversation-not-started: '&cDie Konversation wurde noch nicht gestartet!'
+	request-no-longer-availabe: '&cDie Anfrage ist nicht mehr verfügbar!'
+	you-are-now-in-a-conversation: '&6Du befindest dich nun in einer Konversation mit &b[player]&6!'
+	successfully-denied: '&eErfolgreich abgelehnt.'
+	you-got-denied: '&cDeine Anfrage wurde abgelehnt!'
+	no-conversation: '&cDu befindest dich in keiner Konversation!'
+	already-in-conversation: '&cDu befindest dich bereits in einer Konversation!'
+	only-leaders: '&cNur der Konversationsleiter darf das Gespräch beenden!'
+	conversation-ended: '&eDie Konversation wurde beendet!'
+	already-logged-in: '&cDu bist bereits eingeloggt!'
+	not-logged-in: '&cDu bist nicht eingeloggt!'
+	successfully-logged-in: '&eDu hast dich erfolgreich eingeloggt!'
+	successfully-logged-out: '&eDu hast dich erfolgreich ausgeloggt!'
+	other-login: '&e[player] &ahat sich eingeloggt!'
+	other-logout: '&e[player] &chat sich ausgeloggt!'
+	logged-players: '&fEingeloggte Spieler: [players]'
+	nobody-online: '&eDerzeit ist niemand online.'
+	listen-join: '&7[&a+&7] &7[player]'
+	listen-leave: '&7[&c-&7] &7[player]'
+	invalid-conversation-id: '&cUngültige ID!'
+	successfully-joined: '&eErfolgreich der Konversation §7([id]) §ebeigetreten!'
+	successfully-leaved: '&cDu hast die Konversation verlassen.'
+	reloading: '&eReloading...'
+	successfully-reloaded: '&aReloaded!'
+	reloading-failed: '&cReloading fehlgeschlagen!'
+	chat-layout: '&6[player]: &b[message]'
+	chat-layout-local: '&6Du: &b[message]'
+	no-requests: '&cDerzeit sind keine Anfragen verfügbar!'
+}
+
+# Messages for the user interface
+gui {
+	gui-update: '&cAktualisieren'
+	gui-page: '&aSeite: [page]'
+	gui-reason: '&9Grund: &a[reason]'
+	gui-header: '&9&l&nSupportanfragen'
+	gui-accept: '&a[Annehmen]'
+	gui-back: '&c[Zurück]'
+	gui-listen: '&e[Zuhören]'
+	gui-deny: '&c[Ablehnen]'
+	gui-edit: '&eBearbeitet: &b[supporter] &7([id])'
+}
+
+# Messages for the commands
+commands {
+	syntax: '&cSyntax: &e[command]'
+	syntax-support: '/support [<Grund>]'
+	syntax-leave: '/supportleave oder /scl'
+	syntax-reasons: '&fVerfügbare Gründe: &a[reasons]'
+	syntax-requests: '/requests oder /req'
+	syntax-end: '/scend'
+	syntax-login: '/sclogin [<hidden>]'
+	syntax-logout: '/sclogout'
+	syntax-loglist: '/loglist'
+	syntax-listen: '/listen [<Conversation-ID>]'
+	syntax-reload: '/screload'
+}

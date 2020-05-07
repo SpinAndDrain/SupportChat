@@ -1,7 +1,9 @@
 package de.spinanddrain.supportchat.bungee.command;
 
+import java.sql.SQLException;
 import java.util.List;
 
+import de.spinanddrain.sql.Value;
 import de.spinanddrain.supportchat.Permissions;
 import de.spinanddrain.supportchat.bungee.BungeePlugin;
 import de.spinanddrain.supportchat.bungee.Placeholder;
@@ -151,6 +153,15 @@ public class SCB extends Command {
 						if(r.getState() != RequestState.FINISHED) {
 							if(r.getState() == RequestState.OPEN) {
 								r.setState(RequestState.FINISHED);
+								if(BungeePlugin.provide().getSaver().use() && BungeePlugin.provide().getSql().isConnected()) {
+									try {
+										BungeePlugin.provide().getSql().delete(new Value("id", 
+												r.getRequestor().getUniqueId().toString()), BungeePlugin.provide().getTable());
+									} catch (SQLException e) {
+										e.printStackTrace();
+									}
+								}
+								BungeePlugin.provide().applyLastRequestToNow(r.getRequestor().getUniqueId());
 								BungeePlugin.sendPluginMessage(p, "successfully-denied");
 								BungeePlugin.sendPluginMessage(r.getRequestor(), "you-got-denied");
 							} else

@@ -6,6 +6,8 @@ import org.bukkit.entity.Player;
 
 import de.spinanddrain.supportchat.Permissions;
 import de.spinanddrain.supportchat.spigot.SpigotPlugin;
+import de.spinanddrain.supportchat.spigot.addons.AFKHook;
+import de.spinanddrain.supportchat.spigot.configuration.Addons;
 import de.spinanddrain.supportchat.spigot.configuration.Messages;
 import de.spinanddrain.supportchat.spigot.configuration.Placeholder;
 import de.spinanddrain.supportchat.spigot.conversation.Conversation;
@@ -33,15 +35,24 @@ public class Logout extends SpigotCommand {
 					Conversation conversation = SpigotPlugin.provide().getConversationOf(player);
 					if(conversation != null && conversation.isRunning()) {
 						if(conversation.getListeners().contains(s)) {
-							player.performCommand("listen");
+							player.performCommand("supportchat:listen");
 						} else if(conversation.getHandler() == s) {
 							SpigotPlugin.provide().endConversation(conversation);
 						}
 					}
-					player.sendMessage(Messages.SUCCESSFULLY_LOGGED_OUT.getMessage());
-					for(Supporter i : SpigotPlugin.provide().getOnlineSupporters()) {
-						if(i != s && i.isLoggedIn() && !s.isHidden()) {
-							i.getSupporter().sendMessage(Messages.OTHER_LOGOUT.getWithPlaceholder(Placeholder.create("[player]", player.getName())));
+					if(AFKHook.contains(s)) {
+						player.sendMessage(Messages.PREFIX.getWithoutPrefix() + " " + Addons.provide().getAFKHookLogoutMessage());
+						for(Supporter i : SpigotPlugin.provide().getOnlineSupporters()) {
+							if(i != s && i.isLoggedIn() && !s.isHidden()) {
+								i.getSupporter().sendMessage(Messages.PREFIX.getWithoutPrefix() + " " + Addons.provide().getAFKHookLogoutNotification(s));
+							}
+						}
+					} else {
+						player.sendMessage(Messages.SUCCESSFULLY_LOGGED_OUT.getMessage());
+						for(Supporter i : SpigotPlugin.provide().getOnlineSupporters()) {
+							if(i != s && i.isLoggedIn() && !s.isHidden()) {
+								i.getSupporter().sendMessage(Messages.OTHER_LOGOUT.getWithPlaceholder(Placeholder.create("[player]", player.getName())));
+							}
 						}
 					}
 					s.setHidden(false);

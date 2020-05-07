@@ -1,25 +1,44 @@
 package de.spinanddrain.supportchat.spigot;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import de.spinanddrain.logging.Log;
+import de.spinanddrain.logging.LogType;
+import de.spinanddrain.lscript.exception.FileNotSupportedException;
+import de.spinanddrain.lscript.exception.ScriptException;
+import de.spinanddrain.lscript.resources.Variable;
+import de.spinanddrain.lscript.tools.LParser;
+import de.spinanddrain.lscript.tools.LReader;
+import de.spinanddrain.lscript.tools.LReader.ScriptType;
+import de.spinanddrain.lscript.tools.LWriter;
+import de.spinanddrain.lscript.tools.LWriter.OverridingMethod;
+import de.spinanddrain.prid.ResourceIdParser;
+import de.spinanddrain.sql.Connection;
+import de.spinanddrain.sql.DataType;
+import de.spinanddrain.sql.Parameter;
+import de.spinanddrain.sql.Table;
+import de.spinanddrain.sql.Value;
+import de.spinanddrain.sql.exception.ConnectionException;
 import de.spinanddrain.supportchat.Permissions;
 import de.spinanddrain.supportchat.Server;
 import de.spinanddrain.supportchat.ServerVersion;
 import de.spinanddrain.supportchat.SupportChat;
-import de.spinanddrain.supportchat.external.sql.MySQL;
-import de.spinanddrain.supportchat.external.sql.exception.ConnectionFailedException;
-import de.spinanddrain.supportchat.external.sql.exception.QueryException;
-import de.spinanddrain.supportchat.external.sql.exception.WrongDatatypeException;
-import de.spinanddrain.supportchat.external.sql.overlay.DataValue;
+import de.spinanddrain.supportchat.spigot.DownloadSession.TFile;
 import de.spinanddrain.supportchat.spigot.addons.AFKHook;
 import de.spinanddrain.supportchat.spigot.addons.ActionBar;
 import de.spinanddrain.supportchat.spigot.addons.AfkListener;
@@ -35,6 +54,7 @@ import de.spinanddrain.supportchat.spigot.command.Reload;
 import de.spinanddrain.supportchat.spigot.command.Requests;
 import de.spinanddrain.supportchat.spigot.command.SpigotCommand;
 import de.spinanddrain.supportchat.spigot.command.Support;
+import de.spinanddrain.supportchat.spigot.command.Supportleave;
 import de.spinanddrain.supportchat.spigot.configuration.Addons;
 import de.spinanddrain.supportchat.spigot.configuration.Config;
 import de.spinanddrain.supportchat.spigot.configuration.ConfigurationHandler;
@@ -51,6 +71,8 @@ import de.spinanddrain.supportchat.spigot.gui.WindowItem;
 import de.spinanddrain.supportchat.spigot.request.Request;
 import de.spinanddrain.supportchat.spigot.request.RequestState;
 import de.spinanddrain.supportchat.spigot.supporter.Supporter;
+import de.spinanddrain.updater.Updater;
+import de.spinanddrain.updater.VersionPattern;
 
 public class SpigotPlugin extends JavaPlugin implements Server {
 
@@ -60,10 +82,17 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 	
 	private static SpigotPlugin instance;
 	
+	private Log logger;
+	private Updater u;
+	private final String consolePrefix = "§7[§6SupportChat§7]§r";
+	private final File t = new File(".sccd1");
+	
 	private List<Request> requests;
 	private List<Supporter> supporters;
 	private List<Conversation> conversations;
 	private List<InventoryWindow> windows;
+	
+	private Map<UUID, Long> lastRequest;
 	
 	private ConfigurationHandler config;
 	private ConfigurationHandler messages;
@@ -77,73 +106,132 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 	public WindowItem deny;
 	
 	private ActionBar mb;
-	private Updater u;
-	private MySQL sql;
+	private Connection sql;
+	private Table table;
 	
-	private String storedLanguage;
+	private LParser message;
 	
-	private int notificator;
+	private int notificator, expire;
 	
 	@Override
 	public void onEnable() {
 		instance = this;
+		
+		logger = new Log(getServer().getConsoleSender(), getServer().getLogger(), LogType.RAW);
+		
+		VersionPattern pattern = new VersionPattern(SupportChat.DEPENDENCY_VERSION);
+		String dependencyVersion = getServer().getPluginManager().getPlugin("LibsCollection").getDescription().getVersion();
+		if(!pattern.isEqual(dependencyVersion)) {
+			if(!(SupportChat.HIGHER && pattern.isOlderThan(dependencyVersion))) {
+				logger.log(consolePrefix, "§cThe dependency §eLibsCollection §chas an invalid version (§e" + dependencyVersion + "§c)."
+						+ " Version §e" + SupportChat.DEPENDENCY_VERSION + "§c " + (SupportChat.HIGHER ? "(or higher) " : "") 
+						+ "is required!");
+				getServer().getPluginManager().disablePlugin(this);
+				return;
+			}
+		}
+		
+		u = new Updater(ResourceIdParser.defaultPrid()
+				.getResourceIdByKey("de.spinanddrain.supportchat"), getPluginVersion());
 		
 		requests = new ArrayList<>();
 		supporters = new ArrayList<>();
 		conversations = new ArrayList<>();
 		windows = new ArrayList<>();
 		
+		lastRequest = new HashMap<UUID, Long>();
+		
 		if(getServerVersion() == ServerVersion.UNSUPPORTED_TERMINAL) {
-			getServer().getConsoleSender().sendMessage(Updater.prefix + "Â§c> The plugin does not support your server version!");
-			getServer().getConsoleSender().sendMessage(Updater.prefix + "Â§eDisabling...");
+			logger.log(consolePrefix, "§c> The plugin does not support your server version! Please update your server"
+					+ " to continue using SupportChat.");
+			logger.log(consolePrefix, "§eDisabling...");
 			getServer().getPluginManager().disablePlugin(this);
 			return;
 		}
 		
+		logger.log(consolePrefix, "§ePreparing files...");
+		
+		if(t.exists()) {
+			try {
+				TFile.fetch(t.getName()).performAction();
+				t.delete();
+			} catch (IOException e) {
+				logger.log(consolePrefix, "§cFailed to remove old SupportChat data. This may cause errors, please check"
+						+ " your plugins folder for multiple SupportChat Jar files.");
+				getServer().getPluginManager().disablePlugin(this);
+				t.delete();
+				return;
+			}
+		}
+		
 		prepareConfigurations();
 		
-		getServer().getConsoleSender().sendMessage("Â§7__________[Â§9SupportChat Â§52Â§7]_________");
-		getServer().getConsoleSender().sendMessage(" ");
-		getServer().getConsoleSender().sendMessage("Â§7   Current Version: Â§b"+instance.getDescription().getVersion());
-		getServer().getConsoleSender().sendMessage("Â§7   Plugin by Â§cSpinAndDrain");
-		getServer().getConsoleSender().sendMessage("Â§7   Your Serverversion: Â§b(Spigot) "+getServerVersion().convertFormat());
+		for(String i : SupportChat.getTextField("[§9SupportChat §43§7]", "§7Current Version: §b"+getPluginVersion()+"§r",
+				"§7Plugin by §cSpinAndDrain§r", "§7Your Serverversion: §b(Spigot) "+getServerVersion().convertFormat()+"§r")) {
+			logger.log(i);
+		}
+		
 		String extm = SupportChat.readExternalMessageRaw();
 		if(extm != null && !extm.equals(new String())) {
-			getServer().getConsoleSender().sendMessage("   "+extm.replace("&", "Â§"));
+			logger.log("§7[§eSupportChat: INFO§7]§r", extm.replace("&", "§"));
 		}
-		getServer().getConsoleSender().sendMessage("Â§7__________________________________");
 		
-		u = new Updater(this);
-		
-		if(Config.CHECK_UPDATE.asBoolean()) {
-			u = new Updater(this);
-			u.check(false);
+		if(Config.UPDATER$CHECK_ON_STARTUP.asBoolean()) {
+			logger.log(consolePrefix, "§eSearching for updates...");
+			try {
+				if(u.isAvailable()) {
+					logger.log(consolePrefix, "§eA newer version is available: §b" + u.getLatestVersion());
+					if(Config.UPDATER$AUTO_DOWNLOAD.asBoolean()) {
+						try {
+							logger.log(consolePrefix, "§eDownloading...");
+							u.installLatestVersion(new DownloadSession(this));
+							return;
+						} catch(Exception e) {
+							logger.log(consolePrefix, "§cAn error occurred while downloading the update.");
+							e.printStackTrace();
+						}
+					}
+				} else
+					logger.log(consolePrefix, "§eNo updates found. You are running the latest version of SupportChat.");
+			} catch(Exception e) {
+				logger.log(consolePrefix, "§cAn error occurred while searching for updates.");
+				e.printStackTrace();
+			}
 		}
 		
 		getServer().getOnlinePlayers().forEach(online -> verifyPlayer(online));
 		
 		if(saver.use()) {
-			this.sql = new MySQL(saver.getHost(), String.valueOf(saver.getPort()), saver.getDatabase(), saver.getUser(), saver.getPassword(), saver.useSSL());
-			getLogger().log(Level.WARNING, "The MySQL connection is established synchronously. It could take a while until your server is ready.");
+			HashMap<String, Object> p = new HashMap<>();
+			p.put("autoReconnect", true);
+			p.put("useSSL", saver.useSSL());
+			sql = new Connection(saver.getHost(), saver.getPort(), saver.getUser(), saver.getPassword(), saver.getDatabase(), p);
+			logger.logTemporary("[SupportChat]", "The MySQL connection is established synchronously. "
+					+ "It could take a while until your server is ready.", LogType.WARN);
 			try {
-				this.sql.connect();
-				this.sql.createTable(saver.getDatabaseTable());
-				for(String key : this.sql.getStringifiedKeys(saver.getDatabaseTable(), "id")) {
+				sql.connect();
+				table = sql.createTable("supportchat", new Parameter("id", DataType.VARCHAR, 100, true, true, false, null),
+						new Parameter("reason", DataType.VARCHAR, 100, false, false, false, null),
+						new Parameter("requesttime", DataType.BIGINT, -1, false, true, false, 0L));
+				for(String key : sql.getKeys("id", table)) {
 					Player pp = getServer().getPlayer(UUID.fromString(key));
 					if(pp != null) {
-						requests.add(new Request(pp, this.sql.getString(saver.getDatabaseTable(), new DataValue("id", key), "reason")));
+						requests.add(new Request(pp, (String) sql.get(new Value("id", key), "reason", table),
+								(long) sql.get(new Value("id", key), "requesttime", table)));
 					}
 				}
-			} catch (QueryException | WrongDatatypeException | ConnectionFailedException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 		
 		verifyNotificator();
+		verifyExpire();
 		
 		mb = ActionBar.createOfConfig();
 		
 		registerCommand(new Support());
+		registerCommand(new Supportleave());
 		registerCommand(new Requests());
 		registerCommand(new End());
 		registerCommand(new Login());
@@ -159,29 +247,29 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 			if(Bukkit.getPluginManager().getPlugin("Essentials") != null) {
 				Bukkit.getPluginManager().registerEvents(new AfkListener(), this);
 			} else
-				getLogger().log(Level.WARNING, "Plugin 'Essentials' not found. The Addon 'Essentials-AFK-Hook' was not enabled.");
+				logger.logTemporary("[SupportChat]", "Plugin 'Essentials' not found. The Addon 'Essentials-AFK-Hook' was not enabled.",
+						LogType.WARN);
 		}
 		
 		initialConstantItems();
-		
-		storedLanguage = getLanguage();
 	}
 	
 	@Override
 	public void onDisable() {
 		try {
-			mb.kill();
+			if(mb != null)
+				mb.kill();
 			getServer().getOnlinePlayers().forEach(player -> player.closeInventory());
-			lcroutine();
 		} catch(NullPointerException e) {}
 		if(sql != null && sql.isConnected()) {
 			try {
 				sql.disconnect();
-			} catch (ConnectionFailedException e) {
+			} catch (ConnectionException e) {
 				e.printStackTrace();
 			}
 		}
 		closeNotificatorQuietly();
+		closeExpireQuietly();
 	}
 	
 	public static SpigotPlugin provide() {
@@ -196,8 +284,22 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 		return saver;
 	}
 	
-	public MySQL getSql() {
+	public Connection getSql() {
 		return sql;
+	}
+	
+	public Table getTable() {
+		return table;
+	}
+	
+	public Map<UUID, Long> getLastRequested() {
+		return lastRequest;
+	}
+	
+	public void applyLastRequestToNow(UUID id) {
+		if(lastRequest.containsKey(id))
+			lastRequest.remove(id);
+		lastRequest.put(id, System.currentTimeMillis());
 	}
 	
 	public ConfigurationHandler getNativeConfig() {
@@ -216,12 +318,17 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 		return mb;
 	}
 	
+	public LParser getMessager() {
+		return message;
+	}
+	
 	public int getRequestPages() {
 		return (requests.size() / 53);
 	}
 	
 	private void verifyNotificator() {
-		if(Config.AUTO_NOTIFICATION.asBoolean()) {
+		long duration = Config.AUTO_NOTIFICATION.asTime();
+		if(duration > 0) {
 			notificator = getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> {
 				for(Supporter all : supporters) {
 					if(this.anyRequestOpen() && all.isLoggedIn()) {
@@ -234,13 +341,42 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 						all.getSupporter().sendMessage(Messages.REQUESTS_AVAILABLE.getWithPlaceholder(Placeholder.create("[count]", String.valueOf(b))));
 					}
 				}
-			}, 20, 20 * Config.AUTO_NOTIFICATION_DELAY.asLong());
+			}, 20, 20 * (duration / 1000));
 		}
 	}
 	
 	private void closeNotificatorQuietly() {
 		if(getServer().getScheduler().isCurrentlyRunning(notificator)) {
 			getServer().getScheduler().cancelTask(notificator);
+		}
+	}
+	
+	private void verifyExpire() {
+		long duration = Config.REQUEST_AUTO_DELETE_AFTER.asTime();
+		if(duration > 0) {
+			expire = getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> {
+				for(Iterator<Request> it = requests.iterator(); it.hasNext();) {
+					Request r = it.next();
+					if(r.getState() == RequestState.OPEN && System.currentTimeMillis() > r.getRequestTime() + duration) {
+						Player t = r.getRequestor();
+						if(sql != null && sql.isConnected()) {
+							try {
+								sql.delete(new Value("id", t.getUniqueId().toString()), table);
+							} catch (SQLException e) {
+								e.printStackTrace();
+							}
+						}
+						it.remove();
+						t.sendMessage(Messages.REQUEST_EXPIRED.getMessage());
+					}
+				}
+			}, 20, 20);
+		}
+	}
+	
+	private void closeExpireQuietly() {
+		if(getServer().getScheduler().isCurrentlyRunning(expire)) {
+			getServer().getScheduler().cancelTask(expire);
 		}
 	}
 	
@@ -253,19 +389,13 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 		return false;
 	}
 	
-	private void lcroutine() {
-		final File m = new File("plugins/SupportChat/messages.yml");
-		if(!storedLanguage.equals(getLanguage())) {
-			m.delete();
-			prepareConfigurations();
-		}
-	}
-	
 	public void reload() {
 		closeNotificatorQuietly();
-		lcroutine();
+		closeExpireQuietly();
 		config.reload();
 		messages.reload();
+		prepareLangBasics();
+		Messages.refresh();
 		reasons.reload();
 		Addons.provide().getConfigurationHandler().reload();
 		RewardsConfiguration.provide().getConfigurationHandler().reload();
@@ -274,6 +404,7 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 		initialConstantItems();
 		saver.getHandler().reload();
 		verifyNotificator();
+		verifyExpire();
 	}
 	
 	private void prepareConfigurations() {
@@ -287,11 +418,11 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 		def.build();
 		
 		messages = new ConfigurationHandler(new File("plugins/SupportChat/messages.yml"));
-		def = messages.getBuilder().preBuild("Messages " + getLanguage() + " v" + getPluginVersion());
-		for(Messages i : Messages.values()) {
-			def.add(i.getPath(), (getLanguage().equals("DE") ? i.solution()[0] : i.solution()[1]));
-		}
+		def = messages.getBuilder().preBuild("Messages v" + getPluginVersion());
+		def.add("language-file", "en.lang");
 		def.build();
+		
+		prepareLangBasics();
 		
 		reasons = new ConfigurationHandler(new File("plugins/SupportChat/reasons.yml"));
 		def = reasons.getBuilder().preBuild("Reasons v" + getPluginVersion() + " | Mode: ENABLED, DISABLED, ABSOLUTE_DISABLED");
@@ -302,6 +433,42 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 		Addons.initial();
 		RewardsConfiguration.initial();
 		saver = new Datasaver();
+	}
+	
+	private void prepareLangBasics() {
+		createFiles("s_en.lang", new File("plugins/SupportChat/messages/en.lang"), ScriptType.TRANSLATION);
+		createFiles("s_de.lang", new File("plugins/SupportChat/messages/de.lang"), ScriptType.TRANSLATION);
+		try {
+			message = new LReader(new File("plugins/SupportChat/messages/" + messages.reload().getString("language-file")))
+					.readAndParse(ScriptType.TRANSLATION);
+		} catch (IOException | ScriptException | FileNotSupportedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void createFiles(String resource, File out, ScriptType type) {
+		try {
+			if(!out.getParentFile().exists())
+				out.getParentFile().mkdirs();
+			if(!out.exists())
+				out.createNewFile();
+			InputStream is = this.getResource("resources/spigot/" + resource);
+			File f = new File(resource);
+			FileOutputStream fos = new FileOutputStream(f);
+			byte[] buffer = new byte[is.available()];
+			is.read(buffer);
+			fos.write(buffer);
+			fos.close();
+			LParser p = new LReader(f).readAndParse(type);
+			LWriter w = new LWriter(out, p.getVersionType(), p.getPattern());
+			for(Variable v : p.getVariables())
+				w.addVariable(v.getName(), v.getValue());
+			w.addTranslation(p.getContent());
+			w.write(type, OverridingMethod.UNEXISTING, true);
+			f.delete();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private void initialConstantItems() {
@@ -357,8 +524,8 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 		conversations.remove(c);
 		if(saver.use() && sql.isConnected()) {
 			try {
-				sql.deleteAll(saver.getDatabaseTable(), new DataValue("id", c.getRequest().getRequestor().getUniqueId().toString()));
-			} catch (WrongDatatypeException | QueryException e) {
+				sql.delete(new Value("id", c.getRequest().getRequestor().getUniqueId().toString()), table);
+			} catch (SQLException e) {
 				e.printStackTrace();
 			}
 		}
@@ -490,7 +657,7 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 
 	@Override
 	public String getLanguage() {
-		return Config.LANGUAGE.asString();
+		return "undefined";
 	}
 
 	@Override

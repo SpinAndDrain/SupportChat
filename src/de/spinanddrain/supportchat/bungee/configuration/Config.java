@@ -24,10 +24,12 @@ public class Config {
 		adapter = new ConfigAdapter(new File("plugins/SupportChat/config.yml")) {
 			@Override
 			public void copyDefaults(Configuration cfg) {
-				addDefault("check-update", true);
 				addDefault("join-login", "DISABLED");
-				addDefault("auto-notification.enable", true);
-				addDefault("auto-notification.delay", 120);
+				addDefault("updater.check-on-startup", true);
+				addDefault("updater.auto-download", true);
+				addDefault("auto-notification", "2m");
+				addDefault("request-delay", "10m");
+				addDefault("request-auto-delete-after", "1d");
 			}
 		};
 	}

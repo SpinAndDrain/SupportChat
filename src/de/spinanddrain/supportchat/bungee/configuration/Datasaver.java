@@ -2,9 +2,7 @@ package de.spinanddrain.supportchat.bungee.configuration;
 
 import java.io.File;
 
-import de.spinanddrain.supportchat.SupportChat;
 import de.spinanddrain.supportchat.bungee.ConfigAdapter;
-import de.spinanddrain.supportchat.external.sql.overlay.Table;
 import net.md_5.bungee.config.Configuration;
 
 public class Datasaver {
@@ -25,12 +23,9 @@ public class Datasaver {
 				addDefault("database", "supportchat");
 				addDefault("user", "root");
 				addDefault("password", "pw123");
+				addDefault("useSSL", false);
 			}
 		};
-	}
-	
-	public Table getDatabaseTable() {
-		return SupportChat.SQL_TABLE;
 	}
 	
 	public ConfigAdapter getAdapter() {
@@ -59,6 +54,10 @@ public class Datasaver {
 	
 	public String getPassword() {
 		return adapter.cfg.getString("password");
+	}
+	
+	public boolean useSSL() {
+		return adapter.cfg.getBoolean("useSSL");
 	}
 	
 }

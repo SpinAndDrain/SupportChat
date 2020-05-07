@@ -1,11 +1,14 @@
 name: SupportChat
 author: SpinAndDrain
-version: 5.9
+version: 6.2
 main: de.spinanddrain.supportchat.spigot.SpigotPlugin
+depend: [LibsCollection]
 commands:
   support:
   requests:
     aliases: [req]
+  supportleave:
+    aliases: [scl]
   scend:
   sclogin:
   sclogout:

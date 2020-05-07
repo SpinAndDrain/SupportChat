@@ -70,6 +70,15 @@ public class AFKHook extends Event {
 		return new StringifiedListPacket(id, hidden, left);
 	}
 	
+	public static boolean contains(Supporter s) {
+		for(StringifiedListPacket i : parseAll()) {
+			if(i.getSupporter() == s) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public static StringifiedListPacket[] parseAll() {
 		StringifiedListPacket[] packets = new StringifiedListPacket[MEMORY.size()];
 		for(int i = 0; i < packets.length; i++) {

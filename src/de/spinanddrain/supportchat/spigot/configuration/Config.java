@@ -1,5 +1,6 @@
 package de.spinanddrain.supportchat.spigot.configuration;
 
+import de.spinanddrain.supportchat.SupportChat;
 import de.spinanddrain.supportchat.spigot.SpigotPlugin;
 
 public enum Config {
@@ -8,11 +9,12 @@ public enum Config {
 	 * Created by SpinAndDrain on 11.10.2019
 	 */
 	
-	LANGUAGE("DE"),
 	JOIN_LOGIN(Mode.DISABLED.toString()),
-	CHECK_UPDATE(true),
-	AUTO_NOTIFICATION(true),
-	AUTO_NOTIFICATION_DELAY(120);
+	UPDATER$CHECK_ON_STARTUP(true),
+	UPDATER$AUTO_DOWNLOAD(true),
+	AUTO_NOTIFICATION("2m"),
+	REQUEST_DELAY("10m"),
+	REQUEST_AUTO_DELETE_AFTER("1d");
 	
 	private final String path;
 	private final Object def;
@@ -20,7 +22,7 @@ public enum Config {
 	private final ConfigurationHandler handler;
 	
 	private Config(Object def) {
-		this.path = this.toString().toLowerCase().replaceAll("_", "-");
+		this.path = this.toString().toLowerCase().replace("_", "-").replace("$", ".");
 		this.def = def;
 		this.handler = SpigotPlugin.provide().getNativeConfig();
 	}
@@ -43,6 +45,10 @@ public enum Config {
 
 	public long asLong() {
 		return handler.configuration.getLong(path);
+	}
+	
+	public long asTime() {
+		return SupportChat.getTime(handler.configuration.getString(path));
 	}
 	
 	public Mode asMode() {

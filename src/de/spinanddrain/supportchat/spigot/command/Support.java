@@ -1,16 +1,18 @@
 package de.spinanddrain.supportchat.spigot.command;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import de.spinanddrain.sql.Value;
+import de.spinanddrain.sql.exception.ConnectionException;
 import de.spinanddrain.supportchat.Permissions;
 import de.spinanddrain.supportchat.SupportChat;
-import de.spinanddrain.supportchat.external.StringExtensions;
-import de.spinanddrain.supportchat.external.sql.exception.QueryException;
-import de.spinanddrain.supportchat.external.sql.overlay.DataValue;
 import de.spinanddrain.supportchat.spigot.SpigotPlugin;
+import de.spinanddrain.supportchat.spigot.configuration.Config;
 import de.spinanddrain.supportchat.spigot.configuration.Messages;
 import de.spinanddrain.supportchat.spigot.configuration.Placeholder;
 import de.spinanddrain.supportchat.spigot.configuration.Reasons;
@@ -18,6 +20,7 @@ import de.spinanddrain.supportchat.spigot.configuration.Reasons.Mode;
 import de.spinanddrain.supportchat.spigot.request.Request;
 import de.spinanddrain.supportchat.spigot.request.RequestState;
 import de.spinanddrain.supportchat.spigot.supporter.Supporter;
+import de.spinanddrain.util.advanced.AdvancedString;
 
 public class Support extends SpigotCommand {
 
@@ -40,7 +43,7 @@ public class Support extends SpigotCommand {
 				List<String> reasons = Reasons.REASONS.asList();
 				if(!reasons.contains(reason)) {
 					player.sendMessage(Messages.SYNTAX_REASONS.getWithPlaceholder(Placeholder.create("[reasons]",
-							StringExtensions.bind(reasons.toArray(new String[reasons.size()]), ", "))));
+							AdvancedString.bind(", ", reasons.toArray(new String[reasons.size()])))));
 					return;
 				}
 			}
@@ -53,26 +56,34 @@ public class Support extends SpigotCommand {
 		Supporter su = Supporter.cast(player);
 		if(su == null || !su.isLoggedIn()) {
 			if(!SpigotPlugin.provide().hasRequested(player)) {
-				if(SpigotPlugin.provide().getRequestOf(player.getName()) != null) {
-					Request r = SpigotPlugin.provide().getRequestOf(player.getName());
-					r.setState(RequestState.OPEN);
-					r.setReason(reason);
+				long delay = Config.REQUEST_DELAY.asTime();
+				Map<UUID, Long> m = SpigotPlugin.provide().getLastRequested();
+				UUID id = player.getUniqueId();
+				if(delay > 0 && (!m.containsKey(id) || System.currentTimeMillis() > m.get(id) + delay)) {
+					if(SpigotPlugin.provide().getRequestOf(player.getName()) != null) {
+						Request r = SpigotPlugin.provide().getRequestOf(player.getName());
+						r.setState(RequestState.OPEN);
+						r.setReason(reason);
+					} else
+						SpigotPlugin.provide().getRequests().add(new Request(player, reason));
+					for(Supporter s : SpigotPlugin.provide().getOnlineSupporters()) {
+						if(s.isLoggedIn()) {
+							s.getSupporter().sendMessage(Messages.NEW_REQUEST.getMessage());
+						}
+					}
+					player.sendMessage(Messages.QUEUE_JOINED.getMessage());
+					if(SpigotPlugin.provide().getSaver().use() && SpigotPlugin.provide().getSql().isConnected()) {
+						try {
+							SpigotPlugin.provide().getSql().insert(SpigotPlugin.provide().getTable(),
+									new Value("id", player.getUniqueId().toString()), new Value("reason", reason),
+									new Value("requesttime", System.currentTimeMillis()));
+						} catch (ConnectionException e) {
+							e.printStackTrace();
+						}
+					}
 				} else
-					SpigotPlugin.provide().getRequests().add(new Request(player, reason));
-				for(Supporter s : SpigotPlugin.provide().getOnlineSupporters()) {
-					if(s.isLoggedIn()) {
-						s.getSupporter().sendMessage(Messages.NEW_REQUEST.getMessage());
-					}
-				}
-				player.sendMessage(Messages.QUEUE_JOINED.getMessage());
-				if(SpigotPlugin.provide().getSaver().use() && SpigotPlugin.provide().getSql().isConnected()) {
-					try {
-						SpigotPlugin.provide().getSql().insert(SupportChat.SQL_TABLE, new DataValue[] {new DataValue("id", player.getUniqueId().toString()),
-								new DataValue("reason", reason)});
-					} catch (QueryException e) {
-						e.printStackTrace();
-					}
-				}
+					player.sendMessage(Messages.REQUESTING_TOO_FAST.getWithPlaceholder(Placeholder.create("[remaining]",
+							SupportChat.convertLogical(m.get(id) + delay - System.currentTimeMillis()))));
 			} else
 				player.sendMessage(Messages.ALREADY_IN_QUEUE.getMessage());
 		} else

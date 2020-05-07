@@ -6,6 +6,8 @@ import org.bukkit.entity.Player;
 
 import de.spinanddrain.supportchat.Permissions;
 import de.spinanddrain.supportchat.spigot.SpigotPlugin;
+import de.spinanddrain.supportchat.spigot.addons.AFKHook;
+import de.spinanddrain.supportchat.spigot.configuration.Addons;
 import de.spinanddrain.supportchat.spigot.configuration.Messages;
 import de.spinanddrain.supportchat.spigot.configuration.Placeholder;
 import de.spinanddrain.supportchat.spigot.event.SupporterLoginEvent;
@@ -40,10 +42,19 @@ public class Login extends SpigotCommand {
 				if(!s.isLoggedIn()) {
 					s.setLoggedIn(true);
 					s.setHidden(hidden);
-					player.sendMessage(Messages.SUCCESSFULLY_LOGGED_IN.getMessage());
-					for(Supporter i : SpigotPlugin.provide().getOnlineSupporters()) {
-						if(i != s && i.isLoggedIn() && !hidden) {
-							i.getSupporter().sendMessage(Messages.OTHER_LOGIN.getWithPlaceholder(Placeholder.create("[player]", player.getName())));
+					if(AFKHook.contains(s)) {
+						player.sendMessage(Messages.PREFIX.getWithoutPrefix() + " " + Addons.provide().getAFKHookLoginMessage());
+						for(Supporter i : SpigotPlugin.provide().getOnlineSupporters()) {
+							if(i != s && i.isLoggedIn() && !hidden) {
+								i.getSupporter().sendMessage(Messages.PREFIX.getWithoutPrefix() + " " + Addons.provide().getAFKHookLoginNotification(s));
+							}
+						}
+					} else {
+						player.sendMessage(Messages.SUCCESSFULLY_LOGGED_IN.getMessage());
+						for(Supporter i : SpigotPlugin.provide().getOnlineSupporters()) {
+							if(i != s && i.isLoggedIn() && !hidden) {
+								i.getSupporter().sendMessage(Messages.OTHER_LOGIN.getWithPlaceholder(Placeholder.create("[player]", player.getName())));
+							}
 						}
 					}
 					Bukkit.getPluginManager().callEvent(new SupporterLoginEvent(s, (hidden ? LoginAction.HIDDEN : LoginAction.VISIBLE)));

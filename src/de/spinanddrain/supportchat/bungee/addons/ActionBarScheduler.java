@@ -2,7 +2,6 @@ package de.spinanddrain.supportchat.bungee.addons;
 
 import java.util.concurrent.TimeUnit;
 
-import de.spinanddrain.supportchat.external.Time;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.scheduler.ScheduledTask;
@@ -14,10 +13,10 @@ public class ActionBarScheduler {
 	 */
 
 	private ScheduledTask id;
-	private Time schedule;
+	private long schedule;
 	private Plugin base;
 	
-	public ActionBarScheduler(Time schedule, Plugin base) {
+	public ActionBarScheduler(long schedule, Plugin base) {
 		this.schedule = schedule;
 		this.base = base;
 	}
@@ -33,7 +32,7 @@ public class ActionBarScheduler {
 						ProxyServer.getInstance().getScheduler().cancel(id);
 					}
 				}
-			}, 1, schedule.toSeconds(), TimeUnit.SECONDS);
+			}, 1000L, schedule, TimeUnit.MILLISECONDS);
 		}
 	}
 	
@@ -44,7 +43,7 @@ public class ActionBarScheduler {
 	}
 	
 	public boolean shouldRun() {
-		return (schedule != null && schedule.toMilliseconds() != 0);
+		return (schedule != 0);
 	}
 	
 }

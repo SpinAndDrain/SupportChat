@@ -3,8 +3,6 @@ package de.spinanddrain.supportchat.spigot.addons;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
-import de.spinanddrain.supportchat.external.Time;
-
 public class ActionBarScheduler {
 
 	/*
@@ -12,10 +10,10 @@ public class ActionBarScheduler {
 	 */
 
 	private int id;
-	private Time schedule;
+	private long schedule;
 	private Plugin base;
 	
-	public ActionBarScheduler(Time schedule, Plugin base) {
+	public ActionBarScheduler(long schedule, Plugin base) {
 		this.schedule = schedule;
 		this.base = base;
 	}
@@ -31,7 +29,7 @@ public class ActionBarScheduler {
 						Bukkit.getScheduler().cancelTask(id);
 					}
 				}
-			}, 20, (schedule.toSeconds() * 20));
+			}, 20, (schedule / 1000) * 20);
 		}
 	}
 	
@@ -42,7 +40,7 @@ public class ActionBarScheduler {
 	}
 	
 	public boolean shouldRun() {
-		return (schedule != null && schedule.toMilliseconds() != 0);
+		return (schedule != 0);
 	}
 	
 }

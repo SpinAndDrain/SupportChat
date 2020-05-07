@@ -1,12 +1,24 @@
 package de.spinanddrain.supportchat.bungee;
 
 import java.io.File;
+import java.net.URLClassLoader;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
+import de.spinanddrain.prid.ResourceIdParser;
+import de.spinanddrain.sql.Connection;
+import de.spinanddrain.sql.DataType;
+import de.spinanddrain.sql.Parameter;
+import de.spinanddrain.sql.Table;
+import de.spinanddrain.sql.Value;
+import de.spinanddrain.sql.exception.ConnectionException;
 import de.spinanddrain.supportchat.Permissions;
 import de.spinanddrain.supportchat.Server;
 import de.spinanddrain.supportchat.ServerVersion;
@@ -22,7 +34,9 @@ import de.spinanddrain.supportchat.bungee.command.Reload;
 import de.spinanddrain.supportchat.bungee.command.Req;
 import de.spinanddrain.supportchat.bungee.command.Requests;
 import de.spinanddrain.supportchat.bungee.command.SCB;
+import de.spinanddrain.supportchat.bungee.command.Scl;
 import de.spinanddrain.supportchat.bungee.command.Support;
+import de.spinanddrain.supportchat.bungee.command.Supportleave;
 import de.spinanddrain.supportchat.bungee.configuration.Addons;
 import de.spinanddrain.supportchat.bungee.configuration.Config;
 import de.spinanddrain.supportchat.bungee.configuration.Datasaver;
@@ -32,12 +46,9 @@ import de.spinanddrain.supportchat.bungee.conversation.Conversation;
 import de.spinanddrain.supportchat.bungee.events.Listeners;
 import de.spinanddrain.supportchat.bungee.request.Request;
 import de.spinanddrain.supportchat.bungee.supporter.Supporter;
-import de.spinanddrain.supportchat.external.sql.MySQL;
-import de.spinanddrain.supportchat.external.sql.exception.ConnectionFailedException;
-import de.spinanddrain.supportchat.external.sql.exception.QueryException;
-import de.spinanddrain.supportchat.external.sql.exception.WrongDatatypeException;
-import de.spinanddrain.supportchat.external.sql.overlay.DataValue;
 import de.spinanddrain.supportchat.spigot.request.RequestState;
+import de.spinanddrain.updater.Updater;
+import de.spinanddrain.updater.VersionPattern;
 import net.md_5.bungee.BungeeCord;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
@@ -57,6 +68,7 @@ public class BungeePlugin extends Plugin implements Server {
 	public static final int CONFIG = 0, MESSAGES = 1, REASONS = 2, ADDONS = 3;
 	
 	private Updater u;
+	private final String consolePrefix = "§7[§6SupportChat§7] §r";
 	private ActionBar mb;
 	
 	private Config config;
@@ -69,72 +81,110 @@ public class BungeePlugin extends Plugin implements Server {
 	private List<Request> requests;
 	private List<Conversation> conversations;
 	
-	private MySQL sql;
-	private ScheduledTask notificator;
+	private Map<UUID, Long> lastRequest;
+	
+	private Connection sql;
+	private Table table;
+	private ScheduledTask notificator, expire;
 	
 	@Override
 	public void onEnable() {
 		provider = this;
 		
+		VersionPattern pattern = new VersionPattern(SupportChat.DEPENDENCY_VERSION);
+		String dependencyVersion = getProxy().getPluginManager().getPlugin("LibsCollection").getDescription().getVersion();
+		if(!pattern.isEqual(dependencyVersion)) {
+			if(!(SupportChat.HIGHER && pattern.isOlderThan(dependencyVersion))) {
+				sendMessage(consolePrefix+"§cThe dependency §eLibsCollection §chas an invalid version (§e" + dependencyVersion + "§c)."
+						+ " Version §e" + SupportChat.DEPENDENCY_VERSION + "§c " + (SupportChat.HIGHER ? "(or higher) " : "") 
+						+ "is required!");
+				PluginManager pm = getProxy().getPluginManager();
+				pm.unregisterCommands(this);
+				pm.unregisterListeners(this);
+				try { ((URLClassLoader) getClass().getClassLoader()).close(); } catch(Exception e) {};
+				return;
+			}
+		}
+		
 		supporters = new ArrayList<>();
 		requests = new ArrayList<>();
 		conversations = new ArrayList<>();
 		
+		lastRequest = new HashMap<UUID, Long>();
+		
 		if(getServerVersion() == ServerVersion.UNSUPPORTED_TERMINAL) {
-			sendMessage(Updater.prefix + "Â§c> Â§cThe plugin does not support your server version!");
-			sendMessage(Updater.prefix + "Â§eStopping...");
-			BungeeCord.getInstance().stop("SupportChat: Unsupported Terminal");
+			sendMessage(consolePrefix + "§c> §cThe plugin does not support your server version!");
+			sendMessage(consolePrefix + "§eStopping...");
+			getProxy().stop("SupportChat: Unsupported Terminal");
 			return;
 		}
 		
 		prepareConfigurations();
 		
-		sendMessage("Â§7__________[Â§9SupportChat Â§52Â§7]_________");
-		sendMessage(" ");
-		sendMessage("Â§7   Current Version: Â§b"+provider.getDescription().getVersion());
-		sendMessage("Â§7   Plugin by Â§cSpinAndDrain");
-		sendMessage("Â§7   Your Serverversion: Â§b(BungeeCord) "+getServerVersion().convertFormat());
+		for(String m : SupportChat.getTextField("[§9SupportChat §43§7]", "§7Current Version: §b"
+				+getDescription().getVersion()+"§r", "§7Plugin by §cSpinAndDrain§r",
+				"§7Your Serverversion: §b(BungeeCord) "+getServerVersion().convertFormat()+"§r")) {
+			sendMessage(m);
+		}
+		
 		String extm = SupportChat.readExternalMessageRaw();
 		if(extm != null && !extm.equals(new String())) {
-			sendMessage("   "+extm.replace("&", "Â§"));
+			sendMessage("§7[§cSupportChat: INFO§7] §r" + extm.replace("&", "§"));
 		}
-		sendMessage("Â§7__________________________________");
 		
-		u = new Updater();
+		u = new Updater(ResourceIdParser.defaultPrid().getResourceIdByKey("de.spinanddrain.supportchat"),
+				getDescription().getVersion());
 		
-		if(getBool(CONFIG, "check-update")) {
-			u.check(false);
+		if(getBool(CONFIG, "updater.check-on-startup")) {
+			sendMessage(consolePrefix + "§eChecking for updates...");
+			try {
+				if(u.isAvailable()) {
+					sendMessage(consolePrefix + "§eA newer version is available: §b" + u.getLatestVersion());
+					if(getBool(CONFIG, "updater.auto-download")) {
+						sendMessage(consolePrefix + "§eDownloading...");
+						u.installLatestVersion(new DownloadSession());
+						return;
+					}
+				} else
+					sendMessage(consolePrefix + "§eNo updates found. You are running the latest version of SupportChat.");
+			} catch(Exception e) {
+				sendMessage(consolePrefix + "§cAn error occurred while searching for updates.");
+			}
 		}
 		
 		getProxy().getPlayers().forEach(player -> verifyPlayer(player));
 		
-		if(messages.getParser().getEntries().length < Messages.length) {
-			getLogger().log(Level.WARNING, "Language file '" + messages.getAdapter().cfg.getString("language-file") + "' is incomplete! Please update!");
-		}
-		
 		if(saver.use()) {
-			this.sql = new MySQL(saver.getHost(), String.valueOf(saver.getPort()), saver.getDatabase(), saver.getUser(), saver.getPassword(), saver.useSSL());
+			HashMap<String, Object> p = new HashMap<>();
+			p.put("autoReconnect", true);
+			p.put("useSSL", saver.useSSL());
+			sql = new Connection(saver.getHost(), saver.getPort(), saver.getUser(), saver.getPassword(), saver.getDatabase(), p);
 			getLogger().log(Level.WARNING, "The MySQL connection is established synchronously. It could take a while until your server is ready.");
 			try {
-				this.sql.connect();
-				this.sql.createTable(saver.getDatabaseTable());
-				for(String key : this.sql.getStringifiedKeys(saver.getDatabaseTable(), "id")) {
+				sql.connect();
+				table = sql.createTable("supportchat", new Parameter("id", DataType.VARCHAR, 100, true, true, false, null),
+						new Parameter("reason", DataType.VARCHAR, 100, false, false, false, null),
+						new Parameter("requesttime", DataType.BIGINT, -1, false, true, false, 0L));
+				for(String key : sql.getKeys("id", table)) {
 					ProxiedPlayer pp = BungeeCord.getInstance().getPlayer(UUID.fromString(key));
 					if(pp != null) {
-						requests.add(new Request(pp, this.sql.getString(saver.getDatabaseTable(), new DataValue("id", key), "reason")));
+						requests.add(new Request(pp, (String) sql.get(new Value("id", key), "reason", table)));
 					}
 				}
-			} catch (QueryException | WrongDatatypeException | ConnectionFailedException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 		
 		verifyNotificator();
+		verifyExpireTask();
 		
 		mb = ActionBar.createOfConfig();
 		
 		PluginManager pm = getProxy().getPluginManager();
 		pm.registerCommand(this, new Support());
+		pm.registerCommand(this, new Supportleave("supportleave"));
+		pm.registerCommand(this, new Scl());
 		pm.registerCommand(this, new End());
 		pm.registerCommand(this, new Login());
 		pm.registerCommand(this, new Logout());
@@ -151,26 +201,29 @@ public class BungeePlugin extends Plugin implements Server {
 	@Override
 	public void onDisable() {
 		try {
-			mb.kill();
+			if(mb != null)
+				mb.kill();
 		} catch(Exception e) {}
 		if(this.sql != null && this.sql.isConnected()) {
 			try {
-				this.sql.disconnect();
-			} catch (ConnectionFailedException e) {
+				sql.disconnect();
+			} catch (ConnectionException e) {
 				e.printStackTrace();
 			}
 		}
-		if(notificator != null) {
-			notificator.cancel();
-		}
+		closeTasks();
 	}
 	
 	public static BungeePlugin provide() {
 		return provider;
 	}
 	
-	public MySQL getSql() {
+	public Connection getSql() {
 		return sql;
+	}
+	
+	public Table getTable() {
+		return table;
 	}
 	
 	public Datasaver getSaver() {
@@ -193,6 +246,10 @@ public class BungeePlugin extends Plugin implements Server {
 		return u;
 	}
 	
+	public Map<UUID, Long> getLastRequest() {
+		return lastRequest;
+	}
+	
 	public ActionBar getActionBar() {
 		return mb;
 	}
@@ -202,29 +259,52 @@ public class BungeePlugin extends Plugin implements Server {
 	}
 	
 	private void verifyNotificator() {
-		if(config.getAdapter().cfg.getBoolean("auto-notification.enable")) {
-			notificator = getProxy().getScheduler().schedule(this, getNotificationScheduler(), 1, config.getAdapter().cfg.getLong("auto-notification.delay"), TimeUnit.SECONDS);
+		long time = SupportChat.getTime(getString(CONFIG, "auto-notification"));
+		if(time > 0) {
+			notificator = getProxy().getScheduler().schedule(this, () -> {
+				for(Supporter all : supporters) {
+					if(this.anyRequestOpen() && all.isLoggedIn()) {
+						int b = 0;
+						for(Request r : requests) {
+							if(r.getState() == RequestState.OPEN) {
+								b++;
+							}
+						}
+						sendPluginMessage(all.getSupporter(), "requests-available", new Placeholder("[count]", String.valueOf(b)));
+					}
+				}
+			}, 1000, time, TimeUnit.MILLISECONDS);
 		}
 	}
 	
-	private Runnable getNotificationScheduler() {
-		return () -> {
-			for(Supporter all : supporters) {
-				if(this.anyRequestOpen() && all.isLoggedIn()) {
-					int b = 0;
-					for(Request r : requests) {
-						if(r.getState() == RequestState.OPEN) {
-							b++;
+	private void verifyExpireTask() {
+		long time = SupportChat.getTime(getString(CONFIG, "request-auto-delete-after"));
+		if(time > 0) {
+			expire = getProxy().getScheduler().schedule(this, () -> {
+				for(Iterator<Request> it = requests.iterator(); it.hasNext();) {
+					Request r = it.next();
+					if(r.getState() == RequestState.OPEN && System.currentTimeMillis() > r.getRequestTime() + time) {
+						ProxiedPlayer t = r.getRequestor();
+						if(sql != null && sql.isConnected()) {
+							try {
+								sql.delete(new Value("id", t.getUniqueId().toString()), table);
+							} catch (SQLException e) {
+								e.printStackTrace();
+							}
 						}
-					}
-					if(get(MESSAGES, "requests-available") != null) {
-						sendPluginMessage(all.getSupporter(), "requests-available", new Placeholder("[count]", String.valueOf(b)));
-					} else {
-						sendMessage(getProxy().getConsole(), "Â§cError. Missing entrys in '" + messages.getAdapter().cfg.getString("language-file") + "'");
+						it.remove();
+						sendPluginMessage(t, "request-expired");
 					}
 				}
-			}
-		};
+			}, 1, 1, TimeUnit.SECONDS);
+		}
+	}
+	
+	private void closeTasks() {
+		if(notificator != null)
+			notificator.cancel();
+		if(expire != null)
+			expire.cancel();
 	}
 	
 	public boolean anyRequestOpen() {
@@ -237,9 +317,7 @@ public class BungeePlugin extends Plugin implements Server {
 	}
 	
 	public void reload() {
-		if(notificator != null) {
-			notificator.cancel();
-		}
+		closeTasks();
 		config.getAdapter().reload();
 		messages.getAdapter().reload();
 		messages.reInitParser();
@@ -248,6 +326,7 @@ public class BungeePlugin extends Plugin implements Server {
 		mb.kill();
 		mb = ActionBar.createOfConfig();
 		verifyNotificator();
+		verifyExpireTask();
 	}
 	
 	public static void sendMessage(String message) {
@@ -293,11 +372,17 @@ public class BungeePlugin extends Plugin implements Server {
 		conversations.remove(c);
 		if(saver.use() && sql.isConnected()) {
 			try {
-				sql.deleteAll(saver.getDatabaseTable(), new DataValue("id", c.getRequest().getRequestor().getUniqueId().toString()));
-			} catch (WrongDatatypeException | QueryException e) {
+				sql.delete(new Value("id", c.getRequest().getRequestor().getUniqueId().toString()), table);
+			} catch (SQLException e) {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public void applyLastRequestToNow(UUID id) {
+		if(lastRequest.containsKey(id))
+			lastRequest.remove(id);
+		lastRequest.put(id, System.currentTimeMillis());
 	}
 	
 	public boolean isInConversation(ProxiedPlayer player) {
@@ -307,20 +392,20 @@ public class BungeePlugin extends Plugin implements Server {
 	public static Object get(int i, String path) {
 		switch (i) {
 		case 0:
-			return BungeePlugin.provider.config.getAdapter().cfg.get(path);
+			return provider.config.getAdapter().cfg.get(path);
 		case 1:
-			return BungeePlugin.provider.messages.getParser().getByKey(path);
+			return provider.messages.getParser().getByKey(path);
 		case 2:
-			return BungeePlugin.provider.reasons.getAdapter().cfg.get(path);
+			return provider.reasons.getAdapter().cfg.get(path);
 		case 3:
-			return BungeePlugin.provider.addons.getAdapter().cfg.get(path);
+			return provider.addons.getAdapter().cfg.get(path);
 		default:
 			return null;
 		}
 	}
 	
 	public static String getString(int i, String path) {
-		return ((String) get(i, path)).replaceAll("&", "Â§");
+		return ((String) get(i, path)).replaceAll("&", "§");
 	}
 	
 	public static String getMessage(String path, boolean prefix) {
@@ -486,36 +571,38 @@ public class BungeePlugin extends Plugin implements Server {
 	public String getPluginVersion() {
 		return provider.getDescription().getVersion();
 	}
-
+	
 	public static TextComponent toColoredText(String text) {
-		String[] a = text.split(" ");
-		String build = "";
-		String color = "";
-		for(int i = 0; i < a.length; i++) {
-			String cc;
-			if(a[i].toCharArray().length > 1) {
-				cc = a[i].toCharArray()[0] + "" + a[i].toCharArray()[1];
-			} else {
-				cc = "";
-			}
-			if(a[i].startsWith("Â§") && !cc.equals(color)) {
-				color = cc;
-				String tmp = a[i];
-				if((i + 1) == a.length) {
-					build += tmp;
-				} else {
-					build += tmp + " ";
+		String m = new String(), code = new String();
+		boolean waitForCode = false, waitForFormat = false;
+		char[] ch = text.toCharArray();
+		for(int i = 0; i < ch.length; i++) {
+			if(waitForFormat) {
+				if(ch[i] != '§') {
+					if(ch[i+1] != '§')
+						waitForFormat = false;
+					code += "§" + ch[i];
 				}
-			} else {
-				String tmp = a[i];
-				if((i + 1) == a.length) {
-					build += color + tmp;
-				} else {
-					build += color + tmp + " ";
+			} else if(ch[i] == '§') {
+				waitForCode = true;
+				code = new String();
+			} else if(waitForCode) {
+				waitForCode = false;
+				code = "§" + ch[i];
+				if(ch[i+1] == '§') {
+					switch(ch[i+2]) {
+					case 'k':
+					case 'l':
+					case 'm':
+					case 'n':
+					case 'o':
+						waitForFormat = true;
+					}
 				}
-			}
+			} else
+				m += code + ch[i];
 		}
-		return new TextComponent(build);
+		return new TextComponent(m);
 	}
 	
 }

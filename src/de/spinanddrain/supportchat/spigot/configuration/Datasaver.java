@@ -2,9 +2,6 @@ package de.spinanddrain.supportchat.spigot.configuration;
 
 import java.io.File;
 
-import de.spinanddrain.supportchat.SupportChat;
-import de.spinanddrain.supportchat.external.sql.overlay.Table;
-
 public class Datasaver {
 
 	/*
@@ -15,12 +12,8 @@ public class Datasaver {
 	
 	public Datasaver() {
 		handler = new ConfigurationHandler(new File("plugins/SupportChat/mysql.yml"));
-		handler.getBuilder().preBuild("MySQL option to store requests").add("use", false).add("host", "localhost").add("port", 3306).add("database", "supportchat").add("user", "root").add("password", "pw123").build();
+		handler.getBuilder().preBuild("MySQL option to store requests").add("use", false).add("host", "localhost").add("port", 3306).add("database", "supportchat").add("user", "root").add("password", "pw123").add("useSSL", false).build();
 		handler.save();
-	}
-	
-	public Table getDatabaseTable() {
-		return SupportChat.SQL_TABLE;
 	}
 	
 	public ConfigurationHandler getHandler() {
@@ -49,6 +42,10 @@ public class Datasaver {
 	
 	public String getPassword() {
 		return handler.configuration.getString("password");
+	}
+	
+	public boolean useSSL() {
+		return handler.configuration.getBoolean("useSSL");
 	}
 	
 }

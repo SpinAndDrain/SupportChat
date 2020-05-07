@@ -12,8 +12,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.Plugin;
 
-import de.spinanddrain.supportchat.external.Time;
-import de.spinanddrain.supportchat.external.Time.TimeFormat;
 import de.spinanddrain.supportchat.spigot.SpigotPlugin;
 import de.spinanddrain.supportchat.spigot.configuration.Addons;
 import de.spinanddrain.supportchat.spigot.event.SupporterLoginEvent;
@@ -30,12 +28,12 @@ public class ActionBar {
 	private boolean enableFadeout;
 	private String message;
 	private String empty;
-	private Time cooldown;
+	private long cooldown;
 	private Listener callActionbar;
 	private ActionBarScheduler scheduler;
 	private Plugin base;
 	
-	public ActionBar(boolean enable, boolean enableFadeout, String message, String empty, Time cooldown, Listener callActionbar, ActionBarScheduler scheduler,
+	public ActionBar(boolean enable, boolean enableFadeout, String message, String empty, long cooldown, Listener callActionbar, ActionBarScheduler scheduler,
 			Plugin base) {
 		this.enable = enable;
 		this.enableFadeout = enableFadeout;
@@ -45,7 +43,7 @@ public class ActionBar {
 		this.callActionbar = callActionbar;
 		this.base = base;
 		Bukkit.getPluginManager().registerEvents(callActionbar, base);
-		this.scheduler = (enableFadeout ? new ActionBarScheduler(new Time(TimeFormat.SECONDS, 1), base) : scheduler);
+		this.scheduler = (enableFadeout ? new ActionBarScheduler(1000, base) : scheduler);
 		this.scheduler.start(this);
 	}
 	
@@ -61,7 +59,7 @@ public class ActionBar {
 							sendActionBar((size > 0 ? message.replace("[count]", String.valueOf(size)) : empty.replace("[count]", String.valueOf(size))), player);
 							long t = System.currentTimeMillis();
 							while(System.currentTimeMillis() <= (t + 1000));
-						} while(System.currentTimeMillis() <= (state + cooldown.toMilliseconds()));
+						} while(System.currentTimeMillis() <= (state + cooldown));
 					}
 				});
 			} else {
@@ -134,7 +132,7 @@ public class ActionBar {
 		boolean enableFadeout = Addons.provide().isActionBarFadeoutEnabled();
 		String message = Addons.provide().getActionBarMessage().replaceAll("&", "§");
 		String empty = Addons.provide().getActionBarEmptyMessage().replaceAll("&", "§");
-		Time cooldown = Addons.provide().getActionBarFadeoutCooldown();
+		long cooldown = Addons.provide().getActionBarFadeoutCooldown();
 		Listener callActionbar = new Listener() {
 			
 			@EventHandler

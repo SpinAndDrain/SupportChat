@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+@Deprecated
 public class Updater {
 
 	private final String resource = "60569";
@@ -17,7 +18,7 @@ public class Updater {
 	public boolean checkUpdate() {
 		BungeePlugin.sendMessage(prefix+"§eChecking §efor §eupdates...");
 		try {
-            HttpURLConnection con = (HttpURLConnection) new URL("https://api.spigotmc.org/legacy/update.php?resource="+resource+"key=98BE0FE67F88AB82B4C197FAF1DC3B69206EFDCC4D3B80FC83A00037510B99B4").openConnection();
+            HttpURLConnection con = (HttpURLConnection) new URL("https://api.spigotmc.org/legacy/update.php?resource="+resource+"&key=98BE0FE67F88AB82B4C197FAF1DC3B69206EFDCC4D3B80FC83A00037510B99B4").openConnection();
 //            con.setDoOutput(true);
 //            con.setRequestMethod("POST");
 //            con.getOutputStream().write(("key=98BE0FE67F88AB82B4C197FAF1DC3B69206EFDCC4D3B80FC83A00037510B99B4&resource="+resource).getBytes("UTF-8"));

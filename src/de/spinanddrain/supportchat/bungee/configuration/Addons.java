@@ -4,9 +4,9 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+import de.spinanddrain.supportchat.SupportChat;
 import de.spinanddrain.supportchat.bungee.BungeePlugin;
 import de.spinanddrain.supportchat.bungee.ConfigAdapter;
-import de.spinanddrain.supportchat.external.Time;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.config.Configuration;
@@ -69,16 +69,16 @@ public class Addons {
 		return adapter.cfg.getBoolean("action-bar.fadeout.enable");
 	}
 
-	public Time getFadoutCooldown() {
-		return Time.fromString(adapter.cfg.getString("action-bar.fadeout.cooldown"));
+	public long getFadoutCooldown() {
+		return SupportChat.getTime(adapter.cfg.getString("action-bar.fadeout.cooldown"));
 	}
 	
 	public ActionBarMode getEvent(String event) {
 		return ActionBarMode.valueOf(adapter.cfg.getString("action-bar.events." + event));
 	}
 	
-	public Time getSendEach() {
-		return Time.fromString(adapter.cfg.getString("action-bar.events.send-each"));
+	public long getSendEach() {
+		return SupportChat.getTime(adapter.cfg.getString("action-bar.events.send-each"));
 	}
 	
 	public void sendActionBarByMode(String event, ProxiedPlayer localActor) {

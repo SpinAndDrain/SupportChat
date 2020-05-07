@@ -1,5 +1,7 @@
 package de.spinanddrain.supportchat.spigot.event;
 
+import java.sql.SQLException;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -12,10 +14,8 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import de.spinanddrain.sql.Value;
 import de.spinanddrain.supportchat.Permissions;
-import de.spinanddrain.supportchat.external.sql.exception.QueryException;
-import de.spinanddrain.supportchat.external.sql.exception.WrongDatatypeException;
-import de.spinanddrain.supportchat.external.sql.overlay.DataValue;
 import de.spinanddrain.supportchat.spigot.SpigotPlugin;
 import de.spinanddrain.supportchat.spigot.addons.AFKHook;
 import de.spinanddrain.supportchat.spigot.addons.AFKHook.StringifiedListPacket;
@@ -71,7 +71,7 @@ public class Listeners implements Listener {
 				player.closeInventory();
 				player.performCommand("supportchat:requests");
 			} else {
-				String data = event.getClickedItem().getRaw().getItemMeta().getDisplayName().replaceAll("Â§cÂ§l", new String()).replaceAll("Â§eÂ§l", new String());
+				String data = event.getClickedItem().getRaw().getItemMeta().getDisplayName().replaceAll("§c§l", new String()).replaceAll("§e§l", new String());
 				player.closeInventory();
 				window = new InventoryWindow(9, Messages.MANAGER_REQUEST.getWithoutPrefix());
 				window.addConstant(SpigotPlugin.provide().accept);
@@ -118,8 +118,17 @@ public class Listeners implements Listener {
 				} else if(i.getRaw().getItemMeta().equals(SpigotPlugin.provide().deny.getRaw().getItemMeta())) {
 					if(r.getState() == RequestState.OPEN) {
 						r.setState(RequestState.FINISHED);
+						SpigotPlugin.provide().applyLastRequestToNow(r.getRequestor().getUniqueId());
 						r.getRequestor().sendMessage(Messages.YOU_GOT_DENIED.getMessage());
 						player.sendMessage(Messages.SUCCESSFULLY_DENIED.getMessage());
+						if(SpigotPlugin.provide().getSaver().use() && SpigotPlugin.provide().getSql().isConnected()) {
+							try {
+								SpigotPlugin.provide().getSql().delete(new Value("id", r.getRequestor().getUniqueId().toString()),
+										SpigotPlugin.provide().getTable());
+							} catch (SQLException e) {
+								e.printStackTrace();
+							}
+						}
 					} else
 						player.sendMessage(Messages.CONVERSATION_ALREADY_RUNNING.getMessage());
 				}
@@ -165,12 +174,12 @@ public class Listeners implements Listener {
 		}
 		if(SpigotPlugin.provide().getSaver().use() && SpigotPlugin.provide().getSql().isConnected()) {
 			try {
-				String reason = SpigotPlugin.provide().getSql().getString(SpigotPlugin.provide().getSaver().getDatabaseTable(), 
-						new DataValue("id", player.getUniqueId().toString()), "reason");
+				String reason = (String) SpigotPlugin.provide().getSql().get(new Value("id", player.getUniqueId().toString()), "reason", SpigotPlugin.provide().getTable());
+				long time = (long) SpigotPlugin.provide().getSql().get(new Value("id", player.getUniqueId().toString()), "requesttime", SpigotPlugin.provide().getTable());
 				if(reason != null) {
-					SpigotPlugin.provide().getRequests().add(new Request(player, reason));
+					SpigotPlugin.provide().getRequests().add(new Request(player, reason, time));
 				}
-			} catch (WrongDatatypeException | QueryException e) {}
+			} catch (Exception e) {}
 		}
 	}
 	

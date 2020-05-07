@@ -11,11 +11,17 @@ public class Request {
 	private Player requestor;
 	private String reason;
 	private RequestState state;
+	private long requestTime;
 	
 	public Request(Player requestor, String reason) {
+		this(requestor, reason, System.currentTimeMillis());
+	}
+	
+	public Request(Player requestor, String reason, long requestTime) {
 		this.requestor = requestor;
 		this.reason = reason;
 		this.state = RequestState.OPEN;
+		this.requestTime = requestTime;
 	}
 	
 	public Player getRequestor() {
@@ -27,6 +33,8 @@ public class Request {
 	}
 	
 	public void setState(RequestState state) {
+		if(state == RequestState.OPEN)
+			this.requestTime = System.currentTimeMillis();
 		this.state = state;
 	}
 	
@@ -36,6 +44,10 @@ public class Request {
 
 	public String getReason() {
 		return reason;
+	}
+	
+	public long getRequestTime() {
+		return requestTime;
 	}
 	
 }

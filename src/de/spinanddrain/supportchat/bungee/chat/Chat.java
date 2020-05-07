@@ -38,7 +38,7 @@ public class Chat {
 		for(int i = 0; i < fin.length; i++) {
 			tc.append(fin[i]);
 			if((i + 1) != fin.length) {
-				tc.append(" ยง7* ");
+				tc.append(" ง7* ");
 			}
 		}
 		pp.sendMessage(tc.create());

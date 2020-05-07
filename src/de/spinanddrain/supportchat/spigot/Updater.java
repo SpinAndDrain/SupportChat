@@ -9,6 +9,7 @@ import java.net.URL;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.plugin.Plugin;
 
+@Deprecated
 public class Updater {
 
 	/*
@@ -29,7 +30,7 @@ public class Updater {
 		ConsoleCommandSender c = plugin.getServer().getConsoleSender();
 		c.sendMessage(prefix+"§eChecking for updates...");
 		try {
-            HttpURLConnection con = (HttpURLConnection) new URL("https://api.spigotmc.org/legacy/update.php?resource="+resource+"key=98BE0FE67F88AB82B4C197FAF1DC3B69206EFDCC4D3B80FC83A00037510B99B4").openConnection();
+            HttpURLConnection con = (HttpURLConnection) new URL("https://api.spigotmc.org/legacy/update.php?resource="+resource+"&key=98BE0FE67F88AB82B4C197FAF1DC3B69206EFDCC4D3B80FC83A00037510B99B4").openConnection();
 //            con.setDoOutput(true);
 //            con.setRequestMethod("POST");
 //            con.getOutputStream().write(("key=98BE0FE67F88AB82B4C197FAF1DC3B69206EFDCC4D3B80FC83A00037510B99B4&resource="+resource).getBytes("UTF-8"));

@@ -1,5 +1,6 @@
 package de.spinanddrain.supportchat.bungee.events;
 
+import de.spinanddrain.sql.Value;
 import de.spinanddrain.supportchat.Permissions;
 import de.spinanddrain.supportchat.bungee.BungeePlugin;
 import de.spinanddrain.supportchat.bungee.Placeholder;
@@ -8,9 +9,6 @@ import de.spinanddrain.supportchat.bungee.configuration.Config.Mode;
 import de.spinanddrain.supportchat.bungee.conversation.Conversation;
 import de.spinanddrain.supportchat.bungee.request.Request;
 import de.spinanddrain.supportchat.bungee.supporter.Supporter;
-import de.spinanddrain.supportchat.external.sql.exception.QueryException;
-import de.spinanddrain.supportchat.external.sql.exception.WrongDatatypeException;
-import de.spinanddrain.supportchat.external.sql.overlay.DataValue;
 import net.md_5.bungee.BungeeCord;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
@@ -58,11 +56,12 @@ public class Listeners implements Listener {
 		BungeePlugin.provide().getAddons().sendActionBarByMode("on-join", p);
 		if(BungeePlugin.provide().getSaver().use() && BungeePlugin.provide().getSql().isConnected()) {
 			try {
-				String reason = BungeePlugin.provide().getSql().getString(BungeePlugin.provide().getSaver().getDatabaseTable(), new DataValue("id", p.getUniqueId().toString()), "reason");
+				String reason = (String) BungeePlugin.provide().getSql().get(new Value("id", p.getUniqueId().toString()), "reason",
+						BungeePlugin.provide().getTable());
 				if(reason != null) {
 					BungeePlugin.provide().getRequests().add(new Request(p, reason));
 				}
-			} catch (WrongDatatypeException | QueryException e) {}
+			} catch (Exception e) {}
 		}
 	}
 

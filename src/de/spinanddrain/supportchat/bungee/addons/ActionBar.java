@@ -4,8 +4,6 @@ import java.util.concurrent.TimeUnit;
 
 import de.spinanddrain.supportchat.bungee.BungeePlugin;
 import de.spinanddrain.supportchat.bungee.configuration.Addons;
-import de.spinanddrain.supportchat.external.Time;
-import de.spinanddrain.supportchat.external.Time.TimeFormat;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -21,11 +19,11 @@ public class ActionBar {
 	private boolean enableFadeout;
 	private String message;
 	private String empty;
-	private Time cooldown;
+	private long cooldown;
 	private ActionBarScheduler scheduler;
 	private Plugin base;
 	
-	public ActionBar(boolean enable, boolean enableFadeout, String message, String empty, Time cooldown, ActionBarScheduler scheduler,
+	public ActionBar(boolean enable, boolean enableFadeout, String message, String empty, long cooldown, ActionBarScheduler scheduler,
 			Plugin base) {
 		this.enable = enable;
 		this.enableFadeout = enableFadeout;
@@ -33,7 +31,7 @@ public class ActionBar {
 		this.empty = empty;
 		this.cooldown = cooldown;
 		this.base = base;
-		this.scheduler = (enableFadeout ? new ActionBarScheduler(new Time(TimeFormat.SECONDS, 1), base) : scheduler);
+		this.scheduler = (enableFadeout ? new ActionBarScheduler(1000L, base) : scheduler);
 		this.scheduler.start(this);
 	}
 	
@@ -49,7 +47,7 @@ public class ActionBar {
 							sendActionBar((size > 0 ? message.replace("[count]", String.valueOf(size)) : empty.replace("[count]", String.valueOf(size))), player);
 							long t = System.currentTimeMillis();
 							while(System.currentTimeMillis() <= (t + 1000));
-						} while(System.currentTimeMillis() <= (state + cooldown.toMilliseconds()));
+						} while(System.currentTimeMillis() <= (state + cooldown));
 					}
 				}, 1, TimeUnit.MILLISECONDS);
 			} else {

@@ -4,8 +4,9 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-import de.spinanddrain.supportchat.external.Time;
+import de.spinanddrain.supportchat.SupportChat;
 import de.spinanddrain.supportchat.spigot.SpigotPlugin;
+import de.spinanddrain.supportchat.spigot.supporter.Supporter;
 
 public class Addons {
 
@@ -43,6 +44,10 @@ public class Addons {
 			.add("action-bar.events.on-loglist-view", EventMode.ACTOR.toString())
 			.add("action-bar.events.send-each", "0ms")
 			.add("essentials-afk-hook.enable", false)
+			.add("essentials-afk-hook.login", "&7~ You are logged in again")
+			.add("essentials-afk-hook.logout", "&7~ You got logged out")
+			.add("essentials-afk-hook.login-notification", "&b[player] &egot logged in automatically.")
+			.add("essentials-afk-hook.logout-notification", "&b[player] &egot logged out automatically.")
 			.build();
 	}
 	
@@ -78,8 +83,8 @@ public class Addons {
 		return EventMode.valueOf(handler.configuration.getString("action-bar.events.on-loglist-view"));
 	}
 	
-	public Time getScheduledDelay() {
-		return Time.fromString(handler.configuration.getString("action-bar.events.send-each"));
+	public long getScheduledDelay() {
+		return SupportChat.getTime(handler.configuration.getString("action-bar.events.send-each"));
 	}
 	
 	public boolean isFaqEnabled() {
@@ -106,12 +111,28 @@ public class Addons {
 		return handler.configuration.getBoolean("action-bar.fadeout.enable");
 	}
 	
-	public Time getActionBarFadeoutCooldown() {
-		return Time.fromString(handler.configuration.getString("action-bar.fadeout.cooldown"));
+	public long getActionBarFadeoutCooldown() {
+		return SupportChat.getTime(handler.configuration.getString("action-bar.fadeout.cooldown"));
 	}
 	
 	public boolean isAFKHookEnabled() {
 		return handler.configuration.getBoolean("essentials-afk-hook.enable");
+	}
+	
+	public String getAFKHookLoginMessage() {
+		return handler.configuration.getString("essentials-afk-hook.login").replace("&", "§");
+	}
+	
+	public String getAFKHookLogoutMessage() {
+		return handler.configuration.getString("essentials-afk-hook.logout").replace("&", "§");
+	}
+	
+	public String getAFKHookLoginNotification(Supporter s) {
+		return handler.configuration.getString("essentials-afk-hook.login-notification").replace("&", "§").replace("[player]", s.getSupporter().getName());
+	}
+	
+	public String getAFKHookLogoutNotification(Supporter s) {
+		return handler.configuration.getString("essentials-afk-hook.logout-notification").replace("&", "§").replace("[player]", s.getSupporter().getName());
 	}
 	
 }
