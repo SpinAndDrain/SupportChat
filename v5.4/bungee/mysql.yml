@@ -1,7 +1,0 @@
-# MySQL option to store requests
-use: false
-host: localhost
-port: 3306
-database: supportchat
-user: root
-password: pw123
