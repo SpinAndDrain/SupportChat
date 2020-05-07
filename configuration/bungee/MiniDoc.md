@@ -24,7 +24,7 @@ w | week(s)
 mo | month(s)
 y | year(s)
 
-### Addons
+## Addons
 
 **File:** addons.yml
 
@@ -62,7 +62,7 @@ y | year(s)
   
   * ```send-each: 0ms``` Defines how often the action bar should be shown by the given interval (0 = disabled)
   
-### Config
+## Config
 
 **File:** config.yml
 
@@ -82,14 +82,14 @@ y | year(s)
 * ```request-delay: 10m``` Defines the delay between each support request of a player (this should prevent spam, 0 = disabled)
 * ```request-auto-delete-after: 1d``` Defines the interval after a support request should be automatically deleted if no supporter is handling it (0 = disabled).
 
-### Messages
+## Messages
 
 **File:** messages/messages.yml
 
 * ```language-file: en.lang``` Defines the language file from which all the messages should be read out.
 * **Important:** The file must be in the *messages* folder. You can still edit each message by your own - **.lang** files can be easily edited by a normal text editor. If you need any help see [this little documentation](https://github.com/SpinAndDrain/LibsCollection/blob/master/libraries/LScript.md).
 
-### MySQL
+## MySQL
 
 **File:** mysql.yml
 
@@ -101,7 +101,7 @@ y | year(s)
 * ```password: pw123``` Defines the password for the connection.
 * ```useSSL: false``` *true* if you want to use SSL while connecting/connected.
 
-### Reasons
+## Reasons
 
 **File:** reasons.yml
 
