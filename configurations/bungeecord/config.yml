@@ -1,6 +1,0 @@
-Language: DE
-Settings:
-  only-notify-when-logged: true
-  auto-login-on-join: false
-Updater:
-  check-update-on-enable: true
