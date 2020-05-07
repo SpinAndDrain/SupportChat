@@ -1,0 +1,7 @@
+join-login: DISABLED
+updater:
+  check-on-startup: true
+  auto-download: true
+auto-notification: 2m
+request-delay: 10m
+request-auto-delete-after: 1d

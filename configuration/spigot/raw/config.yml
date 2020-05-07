@@ -1,0 +1,8 @@
+# Config v6.2 | Join-Login: FULL, HIDDEN, PERMISSION_RANGE, DISABLED
+join-login: DISABLED
+updater:
+  check-on-startup: true
+  auto-download: true
+auto-notification: 2m
+request-delay: 10m
+request-auto-delete-after: 1d

@@ -1,0 +1,27 @@
+# Addons v6.2 | Event-Modes: ALL, ACTOR, NONE | Timevalues: ms, s, m, h, d, w, mo, y
+faq:
+  enable: true
+  message:
+  - '&cF'
+  - '&aA'
+  - '&6Q'
+action-bar:
+  enable: true
+  message: '&b[count] &cSupporters online'
+  empty: '&cNo supporters online!'
+  fadeout:
+    enable: false
+    cooldown: 3s
+  events:
+    on-join: ALL
+    on-move: NONE
+    on-supporter-login: ALL
+    on-supporter-logout: ALL
+    on-loglist-view: ACTOR
+    send-each: 0ms
+essentials-afk-hook:
+  enable: false
+  login: '&7~ You are logged in again'
+  logout: '&7~ You got logged out'
+  login-notification: '&b[player] &egot logged in automatically.'
+  logout-notification: '&b[player] &egot logged out automatically.'

@@ -1,0 +1,19 @@
+faq:
+  enable: true
+  message:
+  - '&cF'
+  - '&aA'
+  - '&6Q'
+action-bar:
+  enable: true
+  message: '&b[count] &cSupporters online'
+  empty: '&cNo supporters online!'
+  fadeout:
+    enable: false
+    cooldown: 3s
+  events:
+    on-join: ALL
+    on-supporter-login: ALL
+    on-supporter-logout: ALL
+    on-loglist-view: ACTOR
+    send-each: 0ms
