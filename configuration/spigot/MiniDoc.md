@@ -106,7 +106,7 @@ Placeholder | Replacement
 * **updater**
   * ```check-on-startup: true``` The plugin checks for newer versions on each startup (in the console) if this is set to *true*.
   * ```auto-download: true``` The plugin automatically downloads (if available) the newer version (works only with ```check-on-startup: true```).
-* ```auto-notification: 2m``` All supporters a receiving a message if support requests are still open by the given interval (0 = disabled).
+* ```auto-notification: 2m``` All supporters receiving a message if support requests are still open by the given interval (0 = disabled).
 * ```request-delay: 10m``` Defines the delay between each support request of a player (this should prevent spam, 0 = disabled).
 * ```request-auto-delete-after: 1d``` Defines the interval after a support request should be automatically deleted if no supporter is handling it (0 = disabled).
 
