@@ -2,12 +2,12 @@
 
 ### Quick navigation
 
-* [Time Strings](configuration#time-strings)
-* [Addons](configuration#addons)
-* [Config](configuration#config)
-* [Messages](configuration#messages)
-* [MySQL](configuration#mysql)
-* [Reasons](configuration#reasons)
+* [Time Strings](#time-strings)
+* [Addons](#addons)
+* [Config](#config)
+* [Messages](#messages)
+* [MySQL](#mysql)
+* [Reasons](#reasons)
 
 ### Time Strings
 
