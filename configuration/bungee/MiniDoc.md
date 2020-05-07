@@ -43,7 +43,7 @@ y | year(s)
   
 **Action Bar**
 
-* ```enable: true``` If the action bar should be enabled set this ti *true*, otherwise to *false*.
+* ```enable: true``` If the action bar should be enabled set this to *true*, otherwise to *false*.
 * ```message: '&b[count] &cSupporters online'``` The message which should be shown in the action bar.
 * ```empty: '&cNo supporters online!'``` The message which should be shown in the action bar if no supporter is online.
 * **fadeout**
