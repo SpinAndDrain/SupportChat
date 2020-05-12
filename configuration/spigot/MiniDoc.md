@@ -60,7 +60,7 @@ y | year(s)
 
     Type | Affected
     ---- | --------
-    ALL | Every online player on the network.
+    ALL | Every online player on the server.
     ACTOR | The executing player of the respective event.
     NONE | No player.
   
