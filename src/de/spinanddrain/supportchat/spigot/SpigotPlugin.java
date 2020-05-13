@@ -38,6 +38,7 @@ import de.spinanddrain.supportchat.Permissions;
 import de.spinanddrain.supportchat.Server;
 import de.spinanddrain.supportchat.ServerVersion;
 import de.spinanddrain.supportchat.SupportChat;
+import de.spinanddrain.supportchat.VersionInfo;
 import de.spinanddrain.supportchat.spigot.DownloadSession.TFile;
 import de.spinanddrain.supportchat.spigot.addons.AFKHook;
 import de.spinanddrain.supportchat.spigot.addons.ActionBar;
@@ -85,7 +86,7 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 	private Log logger;
 	private Updater u;
 	private final String consolePrefix = "§7[§6SupportChat§7]§r";
-	private final File t = new File(".sccd1");
+	private final File t = new File(".sccd1"), r = new File(".scbin");
 	
 	private List<Request> requests;
 	private List<Supporter> supporters;
@@ -164,6 +165,25 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 			}
 		}
 		
+		VersionInfo info = VersionInfo.read(r);
+		String stored = info != null ? info.getLastModifiedVersion() : "unknown";
+		if(info == null || !(info.getFileSystem().equals("Spigot") && stored.equals(getPluginVersion()))) {
+			File pluginDir = new File("plugins/SupportChat");
+			if(pluginDir.exists()) {
+				try {
+					File dest = new File("plugins/SupportChat_old/" + stored + "/");
+					if(!dest.exists())
+						dest.mkdirs();
+					SupportChat.moveDirectory(pluginDir, dest);
+				} catch (IOException e) {
+					e.printStackTrace();
+					logger.log(consolePrefix, "§cFailed to remove old SupportChat data. This may cause errors, please check"
+							+ " your plugins folder for existing SupportChat directory.");
+				}
+			}
+			VersionInfo.store(new VersionInfo(getPluginVersion(), "Spigot"), r);
+		}
+		
 		prepareConfigurations();
 		
 		for(String i : SupportChat.getTextField("[§9SupportChat §43§7]", "§7Current Version: §b"+getPluginVersion()+"§r",
@@ -184,11 +204,13 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 					if(Config.UPDATER$AUTO_DOWNLOAD.asBoolean()) {
 						try {
 							logger.log(consolePrefix, "§eDownloading...");
-							u.installLatestVersion(new DownloadSession(this));
+							u.installLatestVersion(new DownloadSession());
 							return;
 						} catch(Exception e) {
 							logger.log(consolePrefix, "§cAn error occurred while downloading the update.");
 							e.printStackTrace();
+							getServer().getPluginManager().disablePlugin(this);
+							return;
 						}
 					}
 				} else
