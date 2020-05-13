@@ -58,8 +58,10 @@ public class Listeners implements Listener {
 			try {
 				String reason = (String) BungeePlugin.provide().getSql().get(new Value("id", p.getUniqueId().toString()), "reason",
 						BungeePlugin.provide().getTable());
+				long time = (long) BungeePlugin.provide().getSql().get(new Value("id", p.getUniqueId().toString()), "requesttime",
+						BungeePlugin.provide().getTable());
 				if(reason != null) {
-					BungeePlugin.provide().getRequests().add(new Request(p, reason));
+					BungeePlugin.provide().getRequests().add(new Request(p, reason, time));
 				}
 			} catch (Exception e) {}
 		}

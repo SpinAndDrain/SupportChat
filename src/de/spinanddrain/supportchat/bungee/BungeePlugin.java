@@ -101,7 +101,7 @@ public class BungeePlugin extends Plugin implements Server {
 				PluginManager pm = getProxy().getPluginManager();
 				pm.unregisterCommands(this);
 				pm.unregisterListeners(this);
-				try { ((URLClassLoader) getClass().getClassLoader()).close(); } catch(Exception e) {};
+				try { ((URLClassLoader) getClass().getClassLoader()).close(); System.gc(); } catch(Exception e) {};
 				return;
 			}
 		}
@@ -168,7 +168,8 @@ public class BungeePlugin extends Plugin implements Server {
 				for(String key : sql.getKeys("id", table)) {
 					ProxiedPlayer pp = BungeeCord.getInstance().getPlayer(UUID.fromString(key));
 					if(pp != null) {
-						requests.add(new Request(pp, (String) sql.get(new Value("id", key), "reason", table)));
+						requests.add(new Request(pp, (String) sql.get(new Value("id", key), "reason", table),
+								(long) sql.get(new Value("id", key), "requesttime", table)));
 					}
 				}
 			} catch (Exception e) {
