@@ -1,6 +1,6 @@
 name: SupportChat
 author: SpinAndDrain
-version: 6.2
+version: 6.3
 main: de.spinanddrain.supportchat.bungee.BungeePlugin
 depends: [LibsCollection]
 commands:
