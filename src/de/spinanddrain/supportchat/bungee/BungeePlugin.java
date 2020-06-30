@@ -68,7 +68,7 @@ public class BungeePlugin extends Plugin implements Server {
 	public static final int CONFIG = 0, MESSAGES = 1, REASONS = 2, ADDONS = 3;
 	
 	private Updater u;
-	private final String consolePrefix = "§7[§6SupportChat§7] §r";
+	private final String consolePrefix = "Â§7[Â§6SupportChatÂ§7] Â§r";
 	private ActionBar mb;
 	
 	private Config config;
@@ -95,8 +95,8 @@ public class BungeePlugin extends Plugin implements Server {
 		String dependencyVersion = getProxy().getPluginManager().getPlugin("LibsCollection").getDescription().getVersion();
 		if(!pattern.isEqual(dependencyVersion)) {
 			if(!(SupportChat.HIGHER && pattern.isOlderThan(dependencyVersion))) {
-				sendMessage(consolePrefix+"§cThe dependency §eLibsCollection §chas an invalid version (§e" + dependencyVersion + "§c)."
-						+ " Version §e" + SupportChat.DEPENDENCY_VERSION + "§c " + (SupportChat.HIGHER ? "(or higher) " : "") 
+				sendMessage(consolePrefix+"Â§cThe dependency Â§eLibsCollection Â§chas an invalid version (Â§e" + dependencyVersion + "Â§c)."
+						+ " Version Â§e" + SupportChat.DEPENDENCY_VERSION + "Â§c " + (SupportChat.HIGHER ? "(or higher) " : "") 
 						+ "is required!");
 				PluginManager pm = getProxy().getPluginManager();
 				pm.unregisterCommands(this);
@@ -112,43 +112,49 @@ public class BungeePlugin extends Plugin implements Server {
 		
 		lastRequest = new HashMap<UUID, Long>();
 		
-		if(getServerVersion() == ServerVersion.UNSUPPORTED_TERMINAL) {
-			sendMessage(consolePrefix + "§c> §cThe plugin does not support your server version!");
-			sendMessage(consolePrefix + "§eStopping...");
+		switch(getServerVersion()) {
+		case UNSUPPORTED_TERMINAL:
+			sendMessage(consolePrefix + "Â§c> Â§cThe plugin does not support your server version!");
+			sendMessage(consolePrefix + "Â§eStopping...");
 			getProxy().stop("SupportChat: Unsupported Terminal");
 			return;
+		case UNKNOWN:
+			sendMessage(consolePrefix + "Â§cCould not find out the server version. Be aware that SupportChat may not"
+					+ " work correctly on this server!");
+			break;
+		default:
+			break;
 		}
 		
 		prepareConfigurations();
 		
-		for(String m : SupportChat.getTextField("[§9SupportChat §43§7]", "§7Current Version: §b"
-				+getDescription().getVersion()+"§r", "§7Plugin by §cSpinAndDrain§r",
-				"§7Your Serverversion: §b(BungeeCord) "+getServerVersion().convertFormat()+"§r")) {
+		for(String m : SupportChat.getTextField("[Â§9SupportChat Â§43Â§7]", "Â§7Current Version: Â§b"
+				+getDescription().getVersion()+"Â§r", "Â§7Plugin by Â§cSpinAndDrainÂ§r",
+				"Â§7Your Serverversion: Â§b(BungeeCord) "+getServerVersion().convertFormat()+"Â§r")) {
 			sendMessage(m);
 		}
 		
 		String extm = SupportChat.readExternalMessageRaw();
 		if(extm != null && !extm.equals(new String())) {
-			sendMessage("§7[§cSupportChat: INFO§7] §r" + extm.replace("&", "§"));
+			sendMessage("Â§7[Â§cSupportChat: INFOÂ§7] Â§r" + extm.replace("&", "Â§"));
 		}
 		
-		u = new Updater(ResourceIdParser.defaultPrid().getResourceIdByKey("de.spinanddrain.supportchat"),
-				getDescription().getVersion());
-		
 		if(getBool(CONFIG, "updater.check-on-startup")) {
-			sendMessage(consolePrefix + "§eChecking for updates...");
+			u = new Updater(ResourceIdParser.defaultPrid().getResourceIdByKey("de.spinanddrain.supportchat"),
+					getDescription().getVersion());
+			sendMessage(consolePrefix + "Â§eChecking for updates...");
 			try {
 				if(u.isAvailable()) {
-					sendMessage(consolePrefix + "§eA newer version is available: §b" + u.getLatestVersion());
+					sendMessage(consolePrefix + "Â§eA newer version is available: Â§b" + u.getLatestVersion());
 					if(getBool(CONFIG, "updater.auto-download")) {
-						sendMessage(consolePrefix + "§eDownloading...");
+						sendMessage(consolePrefix + "Â§eDownloading...");
 						u.installLatestVersion(new DownloadSession());
 						return;
 					}
 				} else
-					sendMessage(consolePrefix + "§eNo updates found. You are running the latest version of SupportChat.");
+					sendMessage(consolePrefix + "Â§eNo updates found. You are running the latest version of SupportChat.");
 			} catch(Exception e) {
-				sendMessage(consolePrefix + "§cAn error occurred while searching for updates.");
+				sendMessage(consolePrefix + "Â§cAn error occurred while searching for updates.");
 			}
 		}
 		
@@ -406,7 +412,7 @@ public class BungeePlugin extends Plugin implements Server {
 	}
 	
 	public static String getString(int i, String path) {
-		return ((String) get(i, path)).replaceAll("&", "§");
+		return ((String) get(i, path)).replaceAll("&", "Â§");
 	}
 	
 	public static String getMessage(String path, boolean prefix) {
@@ -418,25 +424,29 @@ public class BungeePlugin extends Plugin implements Server {
 	}
 	
 	public static ServerVersion getServerVersion() {
-		String v = provider.getProxy().getVersion().split(":")[2];
-		if (v.startsWith("1.8")) {
-			return ServerVersion.v1_8;
-		} else if (v.startsWith("1.9")) {
-			return ServerVersion.v1_9;
-		} else if (v.startsWith("1.10")) {
-			return ServerVersion.v1_10;
-		} else if (v.startsWith("1.11")) {
-			return ServerVersion.v1_11;
-		} else if (v.startsWith("1.12")) {
-			return ServerVersion.v1_12;
-		} else if (v.startsWith("1.13")) {
-			return ServerVersion.v1_13;
-		} else if (v.startsWith("1.14")) {
-			return ServerVersion.v1_14;
-		} else if (v.startsWith("1.15")) { 
-			return ServerVersion.v1_15;
-		} else {
-			return ServerVersion.UNSUPPORTED_TERMINAL;
+		try {
+			String v = provider.getProxy().getVersion().split(":")[2];
+			if (v.startsWith("1.8")) {
+				return ServerVersion.v1_8;
+			} else if (v.startsWith("1.9")) {
+				return ServerVersion.v1_9;
+			} else if (v.startsWith("1.10")) {
+				return ServerVersion.v1_10;
+			} else if (v.startsWith("1.11")) {
+				return ServerVersion.v1_11;
+			} else if (v.startsWith("1.12")) {
+				return ServerVersion.v1_12;
+			} else if (v.startsWith("1.13")) {
+				return ServerVersion.v1_13;
+			} else if (v.startsWith("1.14")) {
+				return ServerVersion.v1_14;
+			} else if (v.startsWith("1.15")) { 
+				return ServerVersion.v1_15;
+			} else {
+				return ServerVersion.UNSUPPORTED_TERMINAL;
+			}
+		} catch(Exception e) {
+			return ServerVersion.UNKNOWN;
 		}
 	}
 	
@@ -579,18 +589,18 @@ public class BungeePlugin extends Plugin implements Server {
 		char[] ch = text.toCharArray();
 		for(int i = 0; i < ch.length; i++) {
 			if(waitForFormat) {
-				if(ch[i] != '§') {
-					if(ch[i+1] != '§')
+				if(ch[i] != 'Â§') {
+					if(ch[i+1] != 'Â§')
 						waitForFormat = false;
-					code += "§" + ch[i];
+					code += "Â§" + ch[i];
 				}
-			} else if(ch[i] == '§') {
+			} else if(ch[i] == 'Â§') {
 				waitForCode = true;
 				code = new String();
 			} else if(waitForCode) {
 				waitForCode = false;
-				code = "§" + ch[i];
-				if(ch[i+1] == '§') {
+				code = "Â§" + ch[i];
+				if(ch[i+1] == 'Â§') {
 					switch(ch[i+2]) {
 					case 'k':
 					case 'l':
