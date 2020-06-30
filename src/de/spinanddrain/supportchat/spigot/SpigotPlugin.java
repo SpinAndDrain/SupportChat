@@ -38,8 +38,6 @@ import de.spinanddrain.supportchat.Permissions;
 import de.spinanddrain.supportchat.Server;
 import de.spinanddrain.supportchat.ServerVersion;
 import de.spinanddrain.supportchat.SupportChat;
-import de.spinanddrain.supportchat.VersionInfo;
-import de.spinanddrain.supportchat.spigot.DownloadSession.TFile;
 import de.spinanddrain.supportchat.spigot.addons.AFKHook;
 import de.spinanddrain.supportchat.spigot.addons.ActionBar;
 import de.spinanddrain.supportchat.spigot.addons.AfkListener;
@@ -85,8 +83,7 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 	
 	private Log logger;
 	private Updater u;
-	private final String consolePrefix = "§7[§6SupportChat§7]§r";
-	private final File t = new File(".sccd1"), r = new File(".scbin");
+	private final String consolePrefix = "Â§7[Â§6SupportChatÂ§7]Â§r";
 	
 	private List<Request> requests;
 	private List<Supporter> supporters;
@@ -124,16 +121,13 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 		String dependencyVersion = getServer().getPluginManager().getPlugin("LibsCollection").getDescription().getVersion();
 		if(!pattern.isEqual(dependencyVersion)) {
 			if(!(SupportChat.HIGHER && pattern.isOlderThan(dependencyVersion))) {
-				logger.log(consolePrefix, "§cThe dependency §eLibsCollection §chas an invalid version (§e" + dependencyVersion + "§c)."
-						+ " Version §e" + SupportChat.DEPENDENCY_VERSION + "§c " + (SupportChat.HIGHER ? "(or higher) " : "") 
+				logger.log(consolePrefix, "Â§cThe dependency Â§eLibsCollection Â§chas an invalid version (Â§e" + dependencyVersion + "Â§c)."
+						+ " Version Â§e" + SupportChat.DEPENDENCY_VERSION + "Â§c " + (SupportChat.HIGHER ? "(or higher) " : "") 
 						+ "is required!");
 				getServer().getPluginManager().disablePlugin(this);
 				return;
 			}
 		}
-		
-		u = new Updater(ResourceIdParser.defaultPrid()
-				.getResourceIdByKey("de.spinanddrain.supportchat"), getPluginVersion());
 		
 		requests = new ArrayList<>();
 		supporters = new ArrayList<>();
@@ -142,81 +136,58 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 		
 		lastRequest = new HashMap<UUID, Long>();
 		
-		if(getServerVersion() == ServerVersion.UNSUPPORTED_TERMINAL) {
-			logger.log(consolePrefix, "§c> The plugin does not support your server version! Please update your server"
+		switch(getServerVersion()) {
+		case UNSUPPORTED_TERMINAL:
+			logger.log(consolePrefix, "Â§c> The plugin does not support your server version! Please update your server"
 					+ " to continue using SupportChat.");
-			logger.log(consolePrefix, "§eDisabling...");
+			logger.log(consolePrefix, "Â§eDisabling...");
 			getServer().getPluginManager().disablePlugin(this);
 			return;
+		case UNKNOWN:
+			logger.log(consolePrefix + " Â§cCould not find out the server version. Be aware that SupportChat may not"
+					+ " work correctly on this server!");
+			break;
+		default:
+			break;
 		}
 		
-		logger.log(consolePrefix, "§ePreparing files...");
-		
-		if(t.exists()) {
-			try {
-				TFile.fetch(t.getName()).performAction();
-				t.delete();
-			} catch (IOException e) {
-				logger.log(consolePrefix, "§cFailed to remove old SupportChat data. This may cause errors, please check"
-						+ " your plugins folder for multiple SupportChat Jar files.");
-				getServer().getPluginManager().disablePlugin(this);
-				t.delete();
-				return;
-			}
-		}
-		
-		VersionInfo info = VersionInfo.read(r);
-		String stored = info != null ? info.getLastModifiedVersion() : "unknown";
-		if(info == null || !(info.getFileSystem().equals("Spigot") && stored.equals(getPluginVersion()))) {
-			File pluginDir = new File("plugins/SupportChat");
-			if(pluginDir.exists()) {
-				try {
-					File dest = new File("plugins/SupportChat_old/" + stored + "/");
-					if(!dest.exists())
-						dest.mkdirs();
-					SupportChat.moveDirectory(pluginDir, dest);
-				} catch (IOException e) {
-					e.printStackTrace();
-					logger.log(consolePrefix, "§cFailed to remove old SupportChat data. This may cause errors, please check"
-							+ " your plugins folder for existing SupportChat directory.");
-				}
-			}
-			VersionInfo.store(new VersionInfo(getPluginVersion(), "Spigot"), r);
-		}
+		logger.log(consolePrefix, "Â§ePreparing files...");
 		
 		prepareConfigurations();
 		
-		for(String i : SupportChat.getTextField("[§9SupportChat §43§7]", "§7Current Version: §b"+getPluginVersion()+"§r",
-				"§7Plugin by §cSpinAndDrain§r", "§7Your Serverversion: §b(Spigot) "+getServerVersion().convertFormat()+"§r")) {
+		for(String i : SupportChat.getTextField("[Â§9SupportChat Â§43Â§7]", "Â§7Current Version: Â§b"+getPluginVersion()+"Â§r",
+				"Â§7Plugin by Â§cSpinAndDrainÂ§r", "Â§7Your Serverversion: Â§b(Spigot) "+getServerVersion().convertFormat()+"Â§r")) {
 			logger.log(i);
 		}
 		
 		String extm = SupportChat.readExternalMessageRaw();
 		if(extm != null && !extm.equals(new String())) {
-			logger.log("§7[§eSupportChat: INFO§7]§r", extm.replace("&", "§"));
+			logger.log("Â§7[Â§eSupportChat: INFOÂ§7]Â§r", extm.replace("&", "Â§"));
 		}
 		
 		if(Config.UPDATER$CHECK_ON_STARTUP.asBoolean()) {
-			logger.log(consolePrefix, "§eSearching for updates...");
+			logger.log(consolePrefix, "Â§eSearching for updates...");
 			try {
+				u = new Updater(ResourceIdParser.defaultPrid().getResourceIdByKey("de.spinanddrain.supportchat"), getPluginVersion());
 				if(u.isAvailable()) {
-					logger.log(consolePrefix, "§eA newer version is available: §b" + u.getLatestVersion());
+					logger.log(consolePrefix, "Â§eA newer version is available: Â§b" + u.getLatestVersion());
 					if(Config.UPDATER$AUTO_DOWNLOAD.asBoolean()) {
 						try {
-							logger.log(consolePrefix, "§eDownloading...");
+							logger.log(consolePrefix, "Â§eDownloading...");
 							u.installLatestVersion(new DownloadSession());
 							return;
 						} catch(Exception e) {
-							logger.log(consolePrefix, "§cAn error occurred while downloading the update.");
+							logger.log(consolePrefix, "Â§cAn error occurred while downloading the update.");
 							e.printStackTrace();
-							getServer().getPluginManager().disablePlugin(this);
+							logger.log(consolePrefix, "Â§cPlease delete multiple SupportChat Jar files if they exist to avoid errors!");
+							getServer().shutdown();
 							return;
 						}
 					}
 				} else
-					logger.log(consolePrefix, "§eNo updates found. You are running the latest version of SupportChat.");
+					logger.log(consolePrefix, "Â§eNo updates found. You are running the latest version of SupportChat.");
 			} catch(Exception e) {
-				logger.log(consolePrefix, "§cAn error occurred while searching for updates.");
+				logger.log(consolePrefix, "Â§cAn error occurred while searching for updates.");
 				e.printStackTrace();
 			}
 		}
@@ -292,10 +263,23 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 		}
 		closeNotificatorQuietly();
 		closeExpireQuietly();
+		clean();
+	}
+	
+	public void clean() {
+		File a = new File(".sccd1"), b = new File(".scbin");
+		if(a.exists())
+			a.delete();
+		if(b.exists())
+			b.delete();
 	}
 	
 	public static SpigotPlugin provide() {
 		return instance;
+	}
+	
+	public Log getLog() {
+		return logger;
 	}
 	
 	public void callAFKEvent(AFKHook event) {
@@ -502,25 +486,29 @@ public class SpigotPlugin extends JavaPlugin implements Server {
 	}
 	
 	public static ServerVersion getServerVersion() {
-		String ver = instance.getServer().getBukkitVersion();
-		if(ver.startsWith("1.8")) {
-			return ServerVersion.v1_8;
-		} else if(ver.startsWith("1.9")) {
-			return ServerVersion.v1_9;
-		} else if(ver.startsWith("1.10")) {
-			return ServerVersion.v1_10;
-		} else if(ver.startsWith("1.11")) {
-			return ServerVersion.v1_11;
-		} else if(ver.startsWith("1.12")) {
-			return ServerVersion.v1_12;
-		} else if(ver.startsWith("1.13")) {
-			return ServerVersion.v1_13;
-		} else if(ver.startsWith("1.14")) {
-			return ServerVersion.v1_14;
-		} else if(ver.startsWith("1.15")) {
-			return ServerVersion.v1_15;
-		} else {
-			return ServerVersion.UNSUPPORTED_TERMINAL;
+		try {
+			String ver = instance.getServer().getBukkitVersion();
+			if(ver.startsWith("1.8")) {
+				return ServerVersion.v1_8;
+			} else if(ver.startsWith("1.9")) {
+				return ServerVersion.v1_9;
+			} else if(ver.startsWith("1.10")) {
+				return ServerVersion.v1_10;
+			} else if(ver.startsWith("1.11")) {
+				return ServerVersion.v1_11;
+			} else if(ver.startsWith("1.12")) {
+				return ServerVersion.v1_12;
+			} else if(ver.startsWith("1.13")) {
+				return ServerVersion.v1_13;
+			} else if(ver.startsWith("1.14")) {
+				return ServerVersion.v1_14;
+			} else if(ver.startsWith("1.15")) {
+				return ServerVersion.v1_15;
+			} else {
+				return ServerVersion.UNSUPPORTED_TERMINAL;
+			}
+		} catch(Exception e) {
+			return ServerVersion.UNKNOWN;
 		}
 	}
 	
