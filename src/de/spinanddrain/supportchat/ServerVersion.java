@@ -10,11 +10,12 @@ public enum ServerVersion {
 	v1_13("1.13"),
 	v1_14("1.14"),
 	v1_15("1.15"),
+	UNKNOWN("?"),
 	UNSUPPORTED_TERMINAL("Unsupported Terminal");
 	
-	String s;
+	private String s;
 	
-	ServerVersion(String s) {
+	private ServerVersion(String s) {
 		this.s = s;
 	}
 	
